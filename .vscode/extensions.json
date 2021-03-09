@@ -1,0 +1,19 @@
+{
+	"recommendations": [
+		// General
+		"wayou.vscode-todo-highlight",
+		"christian-kohler.path-intellisense",
+		"CoenraadS.bracket-pair-colorizer",
+		"cssho.vscode-svgviewer",
+		"naumovs.color-highlight",
+		"formulahendry.auto-complete-tag",
+		"dinhani.divider",
+		"mikestead.dotenv",
+		"eamodio.gitlens",
+		"redhat.vscode-xml",
+		"eg2.vscode-npm-script",
+		"dbaeumer.vscode-eslint",
+		"esbenp.prettier-vscode",
+		"jakebathman.mysql-syntax"
+	]
+}
