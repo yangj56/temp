@@ -1,6 +1,7 @@
 import BaseLayout from '../app/layout/base-layout';
 import { useAppDispatch, useAppSelector } from '../hooks/useSlice';
-import { decrement, increment, selectCount } from '../slice/counter';
+import { decrement, increment } from '../slice/counter';
+// import { store } from '../store';
 
 export function Home(): JSX.Element {
   const count = useAppSelector((state) => state.counter.value);
@@ -26,7 +27,7 @@ export function Home(): JSX.Element {
       >
         Decrement
       </button>
-      {selectCount}
+      {/* {store.getState().counter.value} */}
     </BaseLayout>
   );
 }
