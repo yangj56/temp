@@ -1,10 +1,13 @@
-import BaseLayout from '../app/layout/base-layout';
-import logo from '../assets/logo.svg';
+import { BaseLayout } from 'common/layout/base-layout';
+import logo from 'assets/logo.svg';
+import { CustomizedCarousel } from 'common/carousel';
+import { carouseItemsData } from 'dummy';
 
 export function AboutUs(): JSX.Element {
   return (
     <BaseLayout>
       <h2>About us</h2>
+      <CustomizedCarousel carouselItems={carouseItemsData} />
       <div className="p-6 max-w-sm mx-auto bg-white rounded-xl shadow-md flex items-center space-x-4">
         <div className="flex-shrink-0">
           <img className="h-12 w-12" src={logo} alt="ChitChat Logo" />

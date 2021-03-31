@@ -1,10 +1,12 @@
 /* eslint-disable no-param-reassign */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+// eslint-disable-next-line import/no-cycle
+import { RootState } from 'store/store';
 
 // Define a type for the slice state
-interface CounterState {
+type CounterState = {
   value: number;
-}
+};
 
 // Define the initial state using that type
 const initialState: CounterState = {
@@ -30,4 +32,4 @@ export const counterSlice = createSlice({
 
 export const { increment, decrement, incrementByAmount } = counterSlice.actions;
 
-export default counterSlice.reducer;
+export const selectCount = (state: RootState) => state.counter.value;

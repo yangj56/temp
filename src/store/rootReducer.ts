@@ -1,10 +1,9 @@
+/* eslint-disable import/no-cycle */
 import { combineReducers } from '@reduxjs/toolkit';
-import counterReducer from '../slice/counter';
+import { counterSlice } from '../features/counter/slices/counter';
 
 const rootReducer = combineReducers({
-  counter: counterReducer,
+  counter: counterSlice.reducer,
 });
-
-export type RootState = ReturnType<typeof rootReducer>;
 
 export default rootReducer;

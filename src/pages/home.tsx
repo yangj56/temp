@@ -1,11 +1,20 @@
-import BaseLayout from '../app/layout/base-layout';
-import { useAppDispatch, useAppSelector } from '../hooks/useSlice';
-import { decrement, increment } from '../slice/counter';
-// import { store } from '../store';
+import { useDispatch } from 'react-redux';
+import { BaseLayout } from 'common/layout/base-layout';
+import { useAppSelector } from 'hooks/useSlice';
+import {
+  decrement,
+  increment,
+  selectCount,
+} from 'features/counter/slices/counter';
+import { AppDispatch } from 'store/store';
+import { UserList } from 'features/user/components';
+import { SingleBanner } from 'common/banner/single';
+import { TwinBanner } from 'common/banner/twin';
 
-export function Home(): JSX.Element {
-  const count = useAppSelector((state) => state.counter.value);
-  const dispatch = useAppDispatch();
+export function Home() {
+  const dispatch = useDispatch<AppDispatch>();
+
+  const counter = useAppSelector(selectCount);
   return (
     <BaseLayout>
       <h2>Home</h2>
@@ -19,7 +28,6 @@ export function Home(): JSX.Element {
       >
         Increment
       </button>
-      <span>{count}</span>
       <button
         type="button"
         aria-label="Decrement value"
@@ -27,7 +35,10 @@ export function Home(): JSX.Element {
       >
         Decrement
       </button>
-      {/* {store.getState().counter.value} */}
+      <p>{counter}</p>
+      <UserList />
+      <SingleBanner />
+      <TwinBanner />
     </BaseLayout>
   );
 }

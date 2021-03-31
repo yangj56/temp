@@ -1,4 +1,4 @@
-import BaseLayout from '../app/layout/base-layout';
+import { BaseLayout } from 'common/layout/base-layout';
 
 export function ContactUs(): JSX.Element {
   return (
