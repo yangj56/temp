@@ -1,7 +1,7 @@
 /* eslint-disable react/button-has-type */
 /* eslint-disable @typescript-eslint/dot-notation */
 import { Document, Page } from 'react-pdf/dist/esm/entry.webpack';
-import { BaseLayout } from 'common/layout/base-layout';
+import { MainLayout } from 'common/layout/main';
 import { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/esm/Button';
 import {
@@ -15,7 +15,7 @@ import {
   encrypt as encryptS,
   decrypt as decryptS,
 } from 'util/sym-key';
-import { CustomIframe } from 'common/iframe/custom-site';
+import { CustomIframe } from 'components/iframe/custom-site';
 
 const pdf = require('../dummy/sample2.pdf');
 
@@ -114,7 +114,7 @@ export function Spikes(): JSX.Element {
   };
 
   return (
-    <BaseLayout>
+    <MainLayout>
       {/* <Button variant="outline-primary" onClick={generateAsymKey}>
         Generate Asym keys
       </Button> */}
@@ -154,6 +154,6 @@ export function Spikes(): JSX.Element {
           title="MyInfo Page"
         />
       </div>
-    </BaseLayout>
+    </MainLayout>
   );
 }

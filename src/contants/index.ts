@@ -3,10 +3,20 @@ export enum WebPage {
   ABOUT = '/about',
   CONTACT = '/contact',
   SPKIE = '/spike',
+  SUBPAGE1 = '/subpage1',
+  SUBPAGE2 = '/subpage2',
 }
+
+export type INavDropdownItem = {
+  dropdownTitle: string;
+  dropdownSlug: string;
+};
+
 export type INavItem = {
   title: string;
-  slug: string;
+  slug?: string;
+  id?: string;
+  dropdownItems?: INavDropdownItem[];
 };
 
 export const navItems: INavItem[] = [
@@ -20,7 +30,17 @@ export const navItems: INavItem[] = [
   },
   {
     title: 'Contact Us',
-    slug: WebPage.CONTACT,
+    id: 'contact-us-subpages',
+    dropdownItems: [
+      {
+        dropdownTitle: 'contact details',
+        dropdownSlug: WebPage.CONTACT,
+      },
+      {
+        dropdownTitle: 'subpage 2',
+        dropdownSlug: WebPage.SUBPAGE2,
+      },
+    ],
   },
   {
     title: 'Spikes page',

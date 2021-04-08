@@ -1,4 +1,4 @@
-import { ImageWrapper } from 'common/carousel/styles';
+import { ImageWrapper } from 'components/carousel/styles';
 import Carousel from 'react-bootstrap/Carousel';
 
 export interface CarouselItems {

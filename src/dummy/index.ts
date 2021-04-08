@@ -1,4 +1,4 @@
-import { CarouselItems } from 'common/carousel';
+import { CarouselItems } from 'components/carousel';
 
 export const carouseItemsData: CarouselItems[] = [
   {

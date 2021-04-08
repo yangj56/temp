@@ -1,44 +1,26 @@
-import { useDispatch } from 'react-redux';
-import { BaseLayout } from 'common/layout/base-layout';
-import { useAppSelector } from 'hooks/useSlice';
-import {
-  decrement,
-  increment,
-  selectCount,
-} from 'features/counter/slices/counter';
-import { AppDispatch } from 'store/store';
+import { MainLayout } from 'common/layout/main';
 import { UserList } from 'features/user/components';
-import { SingleBanner } from 'common/banner/single';
-import { TwinBanner } from 'common/banner/twin';
+import { SingleBanner } from 'components/banner/single';
+import { MultipleBanner } from 'components/banner/multiple';
+import { CardProp } from 'typing';
 
 export function Home() {
-  const dispatch = useDispatch<AppDispatch>();
+  const singleBannerData: CardProp = {
+    title: 'title 1',
+    description: 'description',
+    image: 'https://dummyimage.com/600x400/000/fff',
+    imageAlt: 'imagetext',
+    subText: 'this is sub text',
+  };
 
-  const counter = useAppSelector(selectCount);
   return (
-    <BaseLayout>
-      <h2>Home</h2>
-      <button className="bg-red-500 hover:bg-red-700" type="button">
-        Hover me
-      </button>
-      <button
-        type="button"
-        aria-label="Increment value"
-        onClick={() => dispatch(increment())}
-      >
-        Increment
-      </button>
-      <button
-        type="button"
-        aria-label="Decrement value"
-        onClick={() => dispatch(decrement())}
-      >
-        Decrement
-      </button>
-      <p>{counter}</p>
+    <MainLayout>
+      <h3 className="text-xl">Home</h3>
       <UserList />
-      <SingleBanner />
-      <TwinBanner />
-    </BaseLayout>
+      <SingleBanner card={singleBannerData} />
+      <MultipleBanner
+        cards={[singleBannerData, singleBannerData, singleBannerData]}
+      />
+    </MainLayout>
   );
 }

@@ -1,5 +1,5 @@
 import { getUserListing, IUserList } from 'features/user/apis/user-listing';
-import { Listing } from 'common/skeleton-loader/listing';
+import { Listing } from 'components/skeleton-loader/listing';
 import { QueryKey } from 'contants';
 import { useQuery } from 'react-query';
 
