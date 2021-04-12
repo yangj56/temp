@@ -39,4 +39,5 @@ export function getIntValueFromEnv(
 export const config = {
   baseUrl: getValueFromEnv('REACT_APP_BASE_URL', 'https://localhost.com'),
   dummyAPIId: getValueFromEnv('REACT_APP_DUMMPY_API_ID', '123'),
+  serverUrl: getValueFromEnv('REACT_APP_SERVER_URL', 'https://localhost.com'),
 };

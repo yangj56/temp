@@ -1,4 +1,5 @@
 import { CarouselItems } from 'components/carousel';
+import { IFile } from 'pages/dashboard';
 
 export const carouseItemsData: CarouselItems[] = [
   {
@@ -24,5 +25,44 @@ export const carouseItemsData: CarouselItems[] = [
     title: 'item 4 title',
     description: 'item 4 description',
     image: 'https://via.placeholder.com/160',
+  },
+];
+
+export const fileData: IFile[] = [
+  {
+    title: 'title 1',
+    image: 'https://via.placeholder.com/160',
+  },
+  {
+    title: 'title 2',
+    image: 'https://via.placeholder.com/123',
+  },
+  {
+    title: 'title 3',
+    image: 'https://via.placeholder.com/130',
+  },
+  {
+    title: 'title 4',
+    image: 'https://via.placeholder.com/110',
+  },
+  {
+    title: 'title 5',
+    image: 'https://via.placeholder.com/150',
+  },
+  {
+    title: 'title 6',
+    image: 'https://via.placeholder.com/120',
+  },
+  {
+    title: 'title 7',
+    image: 'https://via.placeholder.com/110',
+  },
+  {
+    title: 'title 8',
+    image: 'https://via.placeholder.com/170',
+  },
+  {
+    title: 'title 9',
+    image: 'https://via.placeholder.com/190',
   },
 ];

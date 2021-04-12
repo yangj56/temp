@@ -1,12 +1,6 @@
-import {
-  Button,
-  Form,
-  FormControl,
-  Nav,
-  Navbar,
-  NavDropdown,
-} from 'react-bootstrap';
 import { navItems } from 'contants';
+import { Nav, Navbar, NavDropdown } from 'react-bootstrap';
+import { NavLink } from 'react-router-dom';
 
 type Props = {
   headerTitle?: string;
@@ -15,23 +9,33 @@ type Props = {
 
 export const Header = ({ headerTitle, icon }: Props) => {
   const navComponents = navItems.map(
-    ({ dropdownItems, title, id = '', slug }) => {
+    ({ dropdownItems, title, id = '', slug }, index) => {
       if (dropdownItems && dropdownItems.length > 0) {
         const subNavComponents = dropdownItems.map(
-          ({ dropdownSlug, dropdownTitle }) => (
-            <NavDropdown.Item href={dropdownSlug}>
+          ({ dropdownSlug, dropdownTitle }, dropdownIndex) => (
+            <NavDropdown.Item
+              as={NavLink}
+              to={dropdownSlug || '/'}
+              key={`dropdownitems-${dropdownIndex}-${id}`}
+            >
               {dropdownTitle}
             </NavDropdown.Item>
           )
         );
         return (
-          <NavDropdown title={title} id={id}>
+          <NavDropdown title={title} id={id} key={`dropdown-${index}-${id}`}>
             {subNavComponents}
           </NavDropdown>
         );
       }
       return (
-        <Nav.Link href={slug} id={id}>
+        <Nav.Link
+          as={NavLink}
+          to={slug || '/'}
+          id={id}
+          key={`navitems-${index}-${id}`}
+          exact
+        >
           {title}
         </Nav.Link>
       );
@@ -39,15 +43,13 @@ export const Header = ({ headerTitle, icon }: Props) => {
   );
 
   return (
-    <Navbar bg="light" expand="lg">
-      {icon && <Navbar.Brand href="#home">{icon || headerTitle}</Navbar.Brand>}
+    <Navbar expand="lg" className="bg-red-300">
+      {(icon || headerTitle) && (
+        <Navbar.Brand href="#home">{icon || headerTitle}</Navbar.Brand>
+      )}
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav">
-        <Nav className="mr-auto">{navComponents}</Nav>
-        <Form inline>
-          <FormControl type="text" placeholder="Search" className="mr-sm-2" />
-          <Button variant="outline-success">Search</Button>
-        </Form>
+        <Nav className="items-end">{navComponents}</Nav>
       </Navbar.Collapse>
     </Navbar>
   );

@@ -3,8 +3,10 @@ export enum WebPage {
   ABOUT = '/about',
   CONTACT = '/contact',
   SPKIE = '/spike',
+  POC = '/poc',
   SUBPAGE1 = '/subpage1',
   SUBPAGE2 = '/subpage2',
+  DASHBOARD = '/dashboard',
 }
 
 export type INavDropdownItem = {
@@ -46,8 +48,18 @@ export const navItems: INavItem[] = [
     title: 'Spikes page',
     slug: WebPage.SPKIE,
   },
+  {
+    title: 'POC page',
+    slug: WebPage.POC,
+  },
 ];
 
 export enum QueryKey {
   USER_LIST = 'user_list',
+  LOGIN = 'login',
+}
+
+export enum Role {
+  PUBLIC = 'user',
+  AGENCY = 'agency',
 }

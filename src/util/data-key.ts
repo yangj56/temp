@@ -1,4 +1,7 @@
+import { keyToString } from 'util/helper';
+
 const ALGORITHM = 'AES-GCM';
+const iv = window.crypto.getRandomValues(new Uint8Array(12));
 
 export const generateSymKeyPair = async (): Promise<any> => {
   try {
@@ -10,25 +13,20 @@ export const generateSymKeyPair = async (): Promise<any> => {
       true,
       ['encrypt', 'decrypt']
     );
-    const exported = await window.crypto.subtle.exportKey('raw', key);
-    console.log('exported');
-    console.log(exported);
-    const exportedKeyBuffer = new Uint8Array(exported);
-    return Buffer.from(exportedKeyBuffer).toString('base64');
-  } catch (err) {
-    console.log(err);
-    return 'error';
+    return await keyToString(key);
+  } catch (e) {
+    console.log(`Error occur while generating sym key ${e}`);
   }
+  return 'error';
 };
 
-const iv = window.crypto.getRandomValues(new Uint8Array(12));
 export const encrypt = async (bufferString: any, data: any) => {
   try {
     const myBuffer = Buffer.from(bufferString, 'base64');
     const keyImported = await window.crypto.subtle.importKey(
       'raw',
       myBuffer,
-      'AES-GCM',
+      ALGORITHM,
       true,
       ['encrypt', 'decrypt']
     );
@@ -53,7 +51,7 @@ export const decrypt = async (bufferString: any, ciphertext: any) => {
     const keyImported = await window.crypto.subtle.importKey(
       'raw',
       myBuffer,
-      'AES-GCM',
+      ALGORITHM,
       true,
       ['encrypt', 'decrypt']
     );

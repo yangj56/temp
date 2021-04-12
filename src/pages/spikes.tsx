@@ -14,7 +14,7 @@ import {
   generateSymKeyPair,
   encrypt as encryptS,
   decrypt as decryptS,
-} from 'util/sym-key';
+} from 'util/data-key';
 import { CustomIframe } from 'components/iframe/custom-site';
 
 const pdf = require('../dummy/sample2.pdf');

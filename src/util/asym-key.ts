@@ -1,4 +1,4 @@
-function arrayBufferToBase64(arrayBuffer: any) {
+export function arrayBufferToBase64(arrayBuffer: any) {
   const byteArray = new Uint8Array(arrayBuffer);
   let byteString = '';
   // eslint-disable-next-line no-plusplus
@@ -151,4 +151,8 @@ export const decrypt = async (key: any, data: any) => {
   } catch (err) {
     return null;
   }
+};
+
+export const signstring = async (key: any, data: any) => {
+  return crypto.subtle.sign('ECDSA', key, data);
 };
