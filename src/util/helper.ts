@@ -13,3 +13,11 @@ export const uint8ArrayToString = (val: Uint8Array): string => {
 export const stringTouint8Array = (val: string): Uint8Array => {
   return new Uint8Array(Buffer.from(val, 'base64'));
 };
+
+export const generateSalt = () => {
+  return crypto.getRandomValues(new Uint8Array(16));
+};
+
+export const generateIV = () => {
+  return crypto.getRandomValues(new Uint8Array(12));
+};

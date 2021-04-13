@@ -57,6 +57,7 @@ export const navItems: INavItem[] = [
 export enum QueryKey {
   USER_LIST = 'user_list',
   LOGIN = 'login',
+  ALL_FILE = 'all_file',
 }
 
 export enum Role {

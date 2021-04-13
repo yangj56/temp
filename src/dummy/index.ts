@@ -30,38 +30,47 @@ export const carouseItemsData: CarouselItems[] = [
 
 export const fileData: IFile[] = [
   {
+    id: 'id-1',
     title: 'title 1',
     image: 'https://via.placeholder.com/160',
   },
   {
+    id: 'id-2',
     title: 'title 2',
     image: 'https://via.placeholder.com/123',
   },
   {
+    id: 'id-3',
     title: 'title 3',
     image: 'https://via.placeholder.com/130',
   },
   {
+    id: 'id-4',
     title: 'title 4',
     image: 'https://via.placeholder.com/110',
   },
   {
+    id: 'id-5',
     title: 'title 5',
     image: 'https://via.placeholder.com/150',
   },
   {
+    id: 'id-6',
     title: 'title 6',
     image: 'https://via.placeholder.com/120',
   },
   {
+    id: 'id-7',
     title: 'title 7',
     image: 'https://via.placeholder.com/110',
   },
   {
+    id: 'id-8',
     title: 'title 8',
     image: 'https://via.placeholder.com/170',
   },
   {
+    id: 'id-9',
     title: 'title 9',
     image: 'https://via.placeholder.com/190',
   },

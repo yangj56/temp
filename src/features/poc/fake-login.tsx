@@ -1,24 +1,34 @@
-import { Listing } from 'components/skeleton-loader/listing';
+/* eslint-disable no-alert */
 import { QueryKey, Role } from 'contants';
 import { useQuery } from 'react-query';
 import { Button, ButtonGroup, Card, Form, ToggleButton } from 'react-bootstrap';
 import { useEffect, useState } from 'react';
-import { ILoginResponse, postLoginUser } from 'features/user/apis/login';
+import { ILoginResponse, postLoginUser } from 'features/poc/apis/poc';
 import { useHistory } from 'react-router';
-import { encryptDataWithPassword } from 'util/password-data-key';
+import { encryptDataWithPasswordWithScrypt } from 'util/password-data-key';
 import { generateAsymKeyPair, ReturnData } from 'util/asym-key';
-import { stringTouint8Array, uint8ArrayToString } from 'util/helper';
+import { generateIV, generateSalt, uint8ArrayToString } from 'util/helper';
 import { AppDispatch } from 'store/store';
 import { useDispatch } from 'react-redux';
-import { selectRole, setRole } from 'features/poc/slices/role';
+import {
+  selectRole,
+  setRole,
+  setSalt,
+  setIV,
+  setUserID,
+} from 'features/poc/slices/user';
 import { useAppSelector } from 'hooks/useSlice';
+import { Loading } from 'components/skeleton-loader/loading';
 
 export function FakeLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [publicKey, setPublicKey] = useState('');
   const [encryptedPrivateKey, setEncryptedPrivateKey] = useState('');
-  const [salt, setSalt] = useState<Uint8Array>();
+  const [saltVal, setSaltVal] = useState<Uint8Array>();
+  const [ivVal, setIvVal] = useState<Uint8Array>();
+  const [loadingModal, setLoadingModal] = useState(false);
+  const [goNext, setGoNext] = useState(false);
   const routerHistory = useHistory();
   const dispatch = useDispatch<AppDispatch>();
   const role = useAppSelector(selectRole);
@@ -41,7 +51,8 @@ export function FakeLogin() {
     () =>
       postLoginUser({
         id: username,
-        salt: uint8ArrayToString(salt!),
+        salt: uint8ArrayToString(saltVal!),
+        iv: uint8ArrayToString(ivVal!),
         publicKey,
         encryptedPrivateKey,
         role,
@@ -52,36 +63,59 @@ export function FakeLogin() {
     }
   );
   useEffect(() => {
-    if (publicKey && encryptedPrivateKey && username && salt && role) {
-      console.log('go next');
+    if (
+      publicKey &&
+      encryptedPrivateKey &&
+      username &&
+      saltVal &&
+      role &&
+      goNext
+    ) {
       refetch()
-        .then(() => {
-          routerHistory.push('/dashboard');
+        .then((res) => {
+          if (res.isError) {
+            setGoNext(false);
+            window.alert('cannot go forward');
+          } else if (res.isSuccess) {
+            setGoNext(false);
+            console.log(res.data);
+            dispatch(setSalt(uint8ArrayToString(saltVal!)));
+            dispatch(setIV(uint8ArrayToString(ivVal!)));
+            dispatch(setUserID(username));
+            routerHistory.push('/dashboard');
+          } else {
+            setGoNext(false);
+            window.alert('cannot go somewhat');
+          }
         })
         .catch((err) => {
-          console.log(`login failed with error ${err}`);
+          setGoNext(false);
+          window.alert(`login failed with error ${err}`);
         });
     }
-  }, [publicKey, encryptedPrivateKey, username, salt, role]);
+  }, [publicKey, encryptedPrivateKey, username, saltVal, role, goNext]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(`Login with username:${username} password:${password}`);
-
     const keys = (await generateAsymKeyPair()) as ReturnData;
-    const saltVal = crypto.getRandomValues(new Uint8Array(16));
-    setSalt(saltVal);
-    const encryptedData = await encryptDataWithPassword(
+    const newSalt = generateSalt();
+    const newIV = generateIV();
+    setSaltVal(newSalt);
+    setIvVal(newIV);
+    const encryptedData = await encryptDataWithPasswordWithScrypt(
       password,
       keys.privateKey,
-      saltVal!
+      newSalt!,
+      newIV!
     );
     setPublicKey(keys.publicKey);
     setEncryptedPrivateKey(encryptedData);
+    setLoadingModal(true);
+    setGoNext(true);
   };
 
-  if (isLoading) {
-    return <Listing />;
+  if (isLoading || loadingModal) {
+    return <Loading />;
   }
 
   if (isError) {

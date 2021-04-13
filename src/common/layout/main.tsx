@@ -16,7 +16,7 @@ export function MainLayout({
   const iconComponent = <FaBeer />;
   return (
     <LayoutDiv>
-      <AnnouncementBar title="This is an annoucement" />
+      {/* <AnnouncementBar title="This is an annoucement" /> */}
       {showHeader && <Header icon={iconComponent} />}
       {children}
       <Footer />

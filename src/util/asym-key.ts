@@ -153,6 +153,23 @@ export const decrypt = async (key: any, data: any) => {
   }
 };
 
-export const signstring = async (key: any, data: any) => {
-  return crypto.subtle.sign('ECDSA', key, data);
+export const signString = async (key: string, data: string) => {
+  const result = await crypto.subtle.importKey(
+    'pkcs8',
+    getPkcs8Der(key),
+    {
+      name: ALGORITHM,
+      hash: { name: 'SHA-512' }, // or SHA-512
+    },
+    true,
+    ['decrypt']
+  );
+  return crypto.subtle.sign(
+    {
+      hash: 'SHA-512',
+      name: 'ECDSA',
+    },
+    result,
+    new TextEncoder().encode(data)
+  );
 };
