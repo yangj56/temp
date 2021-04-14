@@ -56,9 +56,15 @@ export interface IUploadFileResponse {
 export const uploadEncryptedFile = async (
   input: FormData
 ): Promise<IUploadFileResponse> => {
-  return apiServerCLient.post('/user/file', input).then((response) => {
-    return response.data.data;
-  });
+  return apiServerCLient
+    .post('/user/file', input, {
+      headers: {
+        'content-type': 'multipart/form-data',
+      },
+    })
+    .then((response) => {
+      return response.data.data;
+    });
 };
 
 export interface IFileResponse {
@@ -115,13 +121,24 @@ export const getEncryptedFile = async (fileId: string): Promise<any> => {
     });
 };
 
+interface IUserPublicKeyAndFileDatakeyResponse {
+  encryptedDataKey: string;
+  publicKey: string;
+  iv: string;
+}
 // API-6
-export const getUserPublicKeyAndFileDatekey = async (
-  input: ILoginInput
-): Promise<ILoginResponse> => {
-  return apiServerCLient.post('/da', input).then((response) => {
-    return response.data.data;
-  });
+export const getUserPublicKeyAndFileDatakey = async (
+  fileId: string,
+  userId: string,
+  receiverId: string
+): Promise<IUserPublicKeyAndFileDatakeyResponse> => {
+  return apiServerCLient
+    .get(
+      `/user/share-file?fileId=${fileId}&sharerId=${userId}&receiverId=${receiverId}`
+    )
+    .then((response) => {
+      return response.data.data;
+    });
 };
 
 // API-7
@@ -133,11 +150,17 @@ export const postLoginUser = async (
   });
 };
 
+interface IEncryptedDataKeyResponse {
+  id: string;
+  key: string;
+  iv: string;
+}
+
 // API-8
 export const getEncryptedDataKey = async (
   fileId: string,
   userId = ''
-): Promise<any> => {
+): Promise<IEncryptedDataKeyResponse> => {
   return apiServerCLient
     .get(`/key?fileId=${fileId}&userId=${userId}`)
     .then((response) => {

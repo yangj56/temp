@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { syncScrypt } from 'scrypt-js';
 import {
-  arrayBufferToBase64String,
+  arrayBufferToBase64,
   arrayBufferToText,
   base64StringToArrayBuffer,
   textToArrayBuffer,
@@ -44,7 +44,7 @@ export const encryptDataWithPasswordWithScrypt = async (
       key,
       dataBuffer
     );
-    return arrayBufferToBase64String(cipherData);
+    return arrayBufferToBase64(cipherData);
   } catch (e) {
     console.log(`Error occur while encryting data ${e}`);
   }
@@ -60,6 +60,8 @@ export const decryptDataWithPasswordWithScrypt = async (
   try {
     const passwordBuffer = textToArrayBuffer(password) as Uint8Array;
     const cipherDataBuffer = base64StringToArrayBuffer(cipherData);
+    console.log('cipherDataBuffer');
+    console.log(cipherData);
     const scryptKeyString = syncScrypt(passwordBuffer, salt, N, r, p, dkLen);
     const key = await crypto.subtle.importKey(
       'raw',
@@ -70,6 +72,7 @@ export const decryptDataWithPasswordWithScrypt = async (
       true,
       ['encrypt', 'decrypt']
     );
+    console.log('--------------decrypting---------');
     const data = await window.crypto.subtle.decrypt(
       {
         name: ALGORITHM,

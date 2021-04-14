@@ -1,4 +1,4 @@
-import { arrayBufferToText, textToArrayBuffer } from 'util/helper';
+import { arrayBufferToBase64, base64StringToArrayBuffer } from 'util/helper';
 
 const ALGORITHM = 'AES-GCM';
 
@@ -56,7 +56,7 @@ export const encryptWithSymmetricKey = async (
 ): Promise<string | null> => {
   try {
     // The iv must never be reused with a given key.
-    const dataBuffer = textToArrayBuffer(data);
+    const dataBuffer = base64StringToArrayBuffer(data);
     const cipherData = await window.crypto.subtle.encrypt(
       {
         name: ALGORITHM,
@@ -65,7 +65,7 @@ export const encryptWithSymmetricKey = async (
       key,
       dataBuffer
     );
-    return arrayBufferToText(cipherData);
+    return arrayBufferToBase64(cipherData);
   } catch (err) {
     console.log(`Error occur while encrypting with sym key ${err}`);
   }
@@ -78,7 +78,7 @@ export const decryptWithSymmetricKey = async (
   iv: Uint8Array
 ) => {
   try {
-    const cipherDataBuffer = textToArrayBuffer(cipherData);
+    const cipherDataBuffer = base64StringToArrayBuffer(cipherData);
     const data = await window.crypto.subtle.decrypt(
       {
         name: ALGORITHM,
@@ -87,7 +87,7 @@ export const decryptWithSymmetricKey = async (
       key,
       cipherDataBuffer
     );
-    return arrayBufferToText(data);
+    return arrayBufferToBase64(data);
   } catch (err) {
     console.log(`Error occur while encrypting with sym key ${err}`);
   }

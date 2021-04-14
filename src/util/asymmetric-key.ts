@@ -1,4 +1,5 @@
 import {
+  arrayBufferToBase64,
   arrayBufferToText,
   convertBinaryToPem,
   convertPemToBinary,
@@ -80,7 +81,7 @@ export const importPrivateKey = async (
 ): Promise<CryptoKey | null> => {
   try {
     return await crypto.subtle.importKey(
-      'spki',
+      'pkcs8',
       convertPemToBinary(pemKey),
       {
         name: ALGORITHM,
@@ -107,7 +108,7 @@ export const encryptWithCryptoKey = async (
       key,
       textToArrayBuffer(data)
     );
-    return arrayBufferToText(encryptedBuffer);
+    return arrayBufferToBase64(encryptedBuffer);
   } catch (err) {
     console.log('error in encrypting with asymmetric key');
     return null;

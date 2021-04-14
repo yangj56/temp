@@ -1,13 +1,13 @@
 /* eslint-disable prefer-template */
 /* eslint-disable security/detect-object-injection */
-export const arrayBufferToBase64String = (arrayBuffer: ArrayBuffer): string => {
+export function arrayBufferToBase64(arrayBuffer: ArrayBuffer) {
   const byteArray = new Uint8Array(arrayBuffer);
   let byteString = '';
   for (let i = 0; i < byteArray.byteLength; i += 1) {
     byteString += String.fromCharCode(byteArray[i]);
   }
-  return btoa(byteString);
-};
+  return window.btoa(byteString);
+}
 
 export const base64StringToArrayBuffer = (b64str: string): ArrayBuffer => {
   return new Uint8Array(Buffer.from(b64str, 'base64'));
@@ -31,21 +31,11 @@ export const arrayBufferToText = (arrayBuffer: ArrayBuffer): string => {
   }
   return str;
 };
-
-export function arrayBufferToBase64(arrayBuffer: ArrayBuffer) {
-  const byteArray = new Uint8Array(arrayBuffer);
-  let byteString = '';
-  for (let i = 0; i < byteArray.byteLength; i += 1) {
-    byteString += String.fromCharCode(byteArray[i]);
-  }
-  return window.btoa(byteString);
-}
-
 export const convertBinaryToPem = (
   binaryData: ArrayBuffer,
   label: string
 ): string => {
-  const base64Cert = arrayBufferToBase64String(binaryData);
+  const base64Cert = arrayBufferToBase64(binaryData);
   let pemCert = '-----BEGIN ' + label + '-----\r\n';
   let nextIndex = 0;
   while (nextIndex < base64Cert.length) {

@@ -120,6 +120,7 @@ export default function Poc() {
     const asymmetricKeyPair = await generateAsymmetricKey();
     const newSalt = generateSalt();
     const newIV = generateIV();
+
     setSaltVal(newSalt);
     setIvVal(newIV);
     const asymmetricKeyPEM = await exportAsymmetricKeyToPEM(asymmetricKeyPair!);
