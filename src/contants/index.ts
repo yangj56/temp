@@ -7,6 +7,7 @@ export enum WebPage {
   SUBPAGE1 = '/subpage1',
   SUBPAGE2 = '/subpage2',
   DASHBOARD = '/dashboard',
+  FILEURL = '/file-url'
 }
 
 export type INavDropdownItem = {

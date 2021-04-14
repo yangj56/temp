@@ -6,6 +6,7 @@ import { AboutUs } from './pages/about-us';
 import { ContactUs } from './pages/contact-us';
 import { Home } from './pages/home';
 import { Spikes } from './pages/spikes';
+import { FileURL } from './pages/file-url';
 
 export function Router(): JSX.Element {
   return (
@@ -28,6 +29,9 @@ export function Router(): JSX.Element {
         </Route>
         <Route path={WebPage.DASHBOARD} exact>
           <Dashboard />
+        </Route>
+        <Route path={WebPage.FILEURL} exact>
+          <FileURL />
         </Route>
       </Switch>
     </BrowserRouter>
