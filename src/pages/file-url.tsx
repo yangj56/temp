@@ -8,12 +8,19 @@ export function FileURL() {
     const border = 'solid 1px';
 
     return (
-        <MainLayout>
-            <div style={{ display:'flex', height:'150px', justifyContent:'center', marginBottom:'50px', marginTop:'100px' }} >
+        // <MainLayout>
+        <div style={{ display:'flex', flexDirection:'column', width:'100%', height:'100%' }} > 
+            <div style={{ display:'flex', background:'#999999', height:'60px', justifyContent:'center', alignItems:'center' }} >
+                <div style={{ fontFamily:'Source Sans Pro', fontSize:'30px', fontStyle:'bold' }} > FileSG </div>
+            </div>
+            <div style={{ display:'flex', height:'150px', justifyContent:'center', marginBottom:'50px', marginTop:'80px' }} >
                 <img src={icaLogo} alt="ica"/>
             </div>
-            <div style={{ display:'flex', flexDirection:'column', height:'200px', width:'100%', justifyContent:'center', alignItems:'center', background:'#ffffff' }}>
-                <div style={{ display:'flex', flexDirection:'column', height:'200px', width:'60%', justifyContent:'center', alignItems:'center', background:'#ffffff', boxSizing: borderBox, border, borderRadius: '10px' }}>
+            <div style={{ display:'flex', flexDirection:'column',width:'100%', justifyContent:'center', alignItems:'center', background:'#ffffff' }}>
+                <div style={{ fontFamily:'Source Sans Pro', fontSize:'24px' }} > ICA E-Service - Death Certificate </div>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', height:'200px', width:'100%', justifyContent:'center', alignItems:'center', background:'#ffffff', marginTop:'50px' }}>
+                <div style={{ display:'flex', flexDirection:'column', height:'200px', width:'40%', justifyContent:'center', alignItems:'center', background:'#ffffff', boxSizing: borderBox, border, borderColor:'#aaaaaa',  borderRadius: '10px' }}>
                     <div style={{ width:'100%', background:'#ffffff', display:'flex', flexDirection:'row', marginBottom:'20px', paddingLeft:'20px' }}> 
                         <div style={{ width:'50%', background:'#ffffff' }}> 
                             Mobile Number
@@ -40,6 +47,7 @@ export function FileURL() {
             </div>
            
             <div style={{ display:'flex', justifyContent:'center', marginTop:'30px', marginBottom:'200px' }} > </div>
-        </MainLayout>
+        </div>
+       
     )
 }
