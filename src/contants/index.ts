@@ -53,6 +53,10 @@ export const navItems: INavItem[] = [
     title: 'POC page',
     slug: WebPage.POC,
   },
+  {
+    title: 'File-URL',
+    slug: WebPage.FILEURL
+  }
 ];
 
 export enum QueryKey {
