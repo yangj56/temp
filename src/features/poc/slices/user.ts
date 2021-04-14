@@ -10,6 +10,8 @@ type RoleState = {
   userID: string;
   salt: string;
   iv: string;
+  publicKey: string;
+  encryptedPrivateKey: string;
 };
 
 // Define the initial state using that type
@@ -18,6 +20,8 @@ const initialState: RoleState = {
   userID: '',
   salt: '',
   iv: '',
+  publicKey: '',
+  encryptedPrivateKey: '',
 };
 
 export const userSlice = createSlice({
@@ -36,11 +40,27 @@ export const userSlice = createSlice({
     setIV: (state, action: PayloadAction<string>) => {
       state.iv = action.payload;
     },
+    setPublicKey: (state, action: PayloadAction<string>) => {
+      state.publicKey = action.payload;
+    },
+    setEncryptedPrivateKey: (state, action: PayloadAction<string>) => {
+      state.encryptedPrivateKey = action.payload;
+    },
   },
 });
 
-export const { setRole, setUserID, setSalt, setIV } = userSlice.actions;
+export const {
+  setRole,
+  setUserID,
+  setSalt,
+  setIV,
+  setPublicKey,
+  setEncryptedPrivateKey,
+} = userSlice.actions;
 export const selectRole = (state: RootState) => state.user.role;
 export const selectUserID = (state: RootState) => state.user.userID;
 export const selectSalt = (state: RootState) => state.user.salt;
 export const selectIV = (state: RootState) => state.user.iv;
+export const selectPublicKey = (state: RootState) => state.user.publicKey;
+export const selectEncryptedPrivateKey = (state: RootState) =>
+  state.user.encryptedPrivateKey;

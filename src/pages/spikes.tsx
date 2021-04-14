@@ -5,16 +5,10 @@ import { MainLayout } from 'common/layout/main';
 import { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/esm/Button';
 import {
-  decrypt,
-  encrypt,
-  generateAsymKeyPair,
-  ReturnData,
-} from 'util/asym-key';
-import {
-  generateSymKeyPair,
-  encrypt as encryptS,
-  decrypt as decryptS,
-} from 'util/data-key';
+  decryptWithCryptoKey,
+  encryptWithCryptoKey,
+  generateAsymmetricKey,
+} from 'util/asymmetric-key';
 import { CustomIframe } from 'components/iframe/custom-site';
 
 const pdf = require('../dummy/sample2.pdf');
@@ -67,18 +61,17 @@ export function Spikes(): JSX.Element {
     reader.readAsArrayBuffer(inputFile);
 
     reader.onload = async function () {
-      const arrayBuffer =
-        symEncryptedKey && Buffer.from(symEncryptedKey, 'base64');
-      const decryptedSymKey = await decrypt(asymPriKey, arrayBuffer);
-      const encryptedData = await encryptS(decryptedSymKey, reader.result);
-      console.log('encryptedData');
-      console.log(encryptedData);
-      const decryptedData = await decryptS(decryptedSymKey, encryptedData);
-      console.log('onload here again');
-      console.log(reader.result);
-      console.log(encryptedData);
-
-      setFile(decryptedData);
+      // const arrayBuffer =
+      //   symEncryptedKey && Buffer.from(symEncryptedKey, 'base64');
+      // const decryptedSymKey = await decrypt(asymPriKey, arrayBuffer);
+      // const encryptedData = await encryptS(decryptedSymKey, reader.result);
+      // console.log('encryptedData');
+      // console.log(encryptedData);
+      // const decryptedData = await decryptS(decryptedSymKey, encryptedData);
+      // console.log('onload here again');
+      // console.log(reader.result);
+      // console.log(encryptedData);
+      // setFile(decryptedData);
     };
 
     reader.onerror = function () {
@@ -90,20 +83,20 @@ export function Spikes(): JSX.Element {
     setNumPages(numPages);
   }
   const generateAsymKey = async () => {
-    const keys = (await generateAsymKeyPair()) as ReturnData;
-    setAsymPriKey(keys.privateKey);
-    setAsymPubKey(keys.publicKey);
+    // const keys = (await generateAsymKeyPair()) as ReturnData;
+    // setAsymPriKey(keys.privateKey);
+    // setAsymPubKey(keys.publicKey);
   };
   const generateSymKey = async () => {
-    const key = await generateSymKeyPair();
-    setSymKey(key);
-    // const data = 'final message is the same hello';
-    console.log(asymPubKey);
-    const encryptedSymKey = await encrypt(asymPubKey, key);
-    console.log(encryptedSymKey);
-    const base64String =
-      encryptedSymKey && Buffer.from(encryptedSymKey).toString('base64');
-    setSymEncryptedKey(base64String);
+    // const key = await generateSymKeyPair();
+    // setSymKey(key);
+    // // const data = 'final message is the same hello';
+    // console.log(asymPubKey);
+    // const encryptedSymKey = await encrypt(asymPubKey, key);
+    // console.log(encryptedSymKey);
+    // const base64String =
+    //   encryptedSymKey && Buffer.from(encryptedSymKey).toString('base64');
+    // setSymEncryptedKey(base64String);
     // const arrayBuffer = base64String && Buffer.from(base64String, 'base64');
     // const decryptedSymKey = await decrypt(asymPriKey, arrayBuffer);
     // const encryptedData = await encryptS(decryptedSymKey, data);

@@ -1,4 +1,5 @@
 import { apiServerCLient } from 'config/api-client';
+import { String } from 'lodash';
 
 export interface ILoginInput {
   id: string;
@@ -10,8 +11,12 @@ export interface ILoginInput {
 }
 
 export interface ILoginResponse {
-  username: string;
-  password: string;
+  id: string;
+  iv: string;
+  salt: string;
+  role: string;
+  encryptedPrivateKey: string;
+  publicKey: string;
 }
 
 export interface IAddKeyInput {
@@ -38,7 +43,7 @@ export const addEncryptedDataKey = async (
 
 export interface IUploadFileInput {
   userId: string;
-  file: string;
+  file: File;
   encryptedDataKey: string;
 }
 
@@ -49,7 +54,7 @@ export interface IUploadFileResponse {
 
 // API-2
 export const uploadEncryptedFile = async (
-  input: IUploadFileInput
+  input: FormData
 ): Promise<IUploadFileResponse> => {
   return apiServerCLient.post('/user/file', input).then((response) => {
     return response.data.data;
@@ -100,12 +105,14 @@ export interface IDownloadFile {
 }
 
 // API-5
-export const getEncryptedFile = async (
-  input: IDownloadFile
-): Promise<string> => {
-  return apiServerCLient.post(`/file`, input).then((response) => {
-    return response.data.data;
-  });
+export const getEncryptedFile = async (fileId: string): Promise<any> => {
+  return apiServerCLient
+    .get(`/file/${fileId}`, {
+      responseType: 'blob',
+    })
+    .then((response) => {
+      return response;
+    });
 };
 
 // API-6
@@ -124,4 +131,16 @@ export const postLoginUser = async (
   return apiServerCLient.post('/user', input).then((response) => {
     return response.data.data;
   });
+};
+
+// API-8
+export const getEncryptedDataKey = async (
+  fileId: string,
+  userId = ''
+): Promise<any> => {
+  return apiServerCLient
+    .get(`/key?fileId=${fileId}&userId=${userId}`)
+    .then((response) => {
+      return response.data.data;
+    });
 };

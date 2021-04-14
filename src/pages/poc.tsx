@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+/* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable no-alert */
 import { MainLayout } from 'common/layout/main';
 import { QueryKey, Role } from 'contants';
@@ -7,8 +9,11 @@ import { useEffect, useState } from 'react';
 import { ILoginResponse, postLoginUser } from 'features/poc/apis/poc';
 import { useHistory } from 'react-router';
 import { encryptDataWithPasswordWithScrypt } from 'util/password-data-key';
-import { generateAsymKeyPair, ReturnData } from 'util/asym-key';
-import { generateIV, generateSalt, uint8ArrayToString } from 'util/helper';
+import {
+  exportAsymmetricKeyToPEM,
+  generateAsymmetricKey,
+} from 'util/asymmetric-key';
+import { generateIV, generateSalt, arrayBufferToBase64 } from 'util/helper';
 import { AppDispatch } from 'store/store';
 import { useDispatch } from 'react-redux';
 import {
@@ -17,15 +22,16 @@ import {
   setSalt,
   setIV,
   setUserID,
+  setPublicKey,
 } from 'features/poc/slices/user';
 import { useAppSelector } from 'hooks/useSlice';
-import { Loading } from 'components/skeleton-loader/loading';
+import { LoadingClip } from 'components/modal/loading';
 
 export default function Poc() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [publicKey, setPublicKey] = useState('');
-  const [encryptedPrivateKey, setEncryptedPrivateKey] = useState('');
+  const [encryptedPrivateKeyVal, setEncryptedPrivateKeyVal] = useState('');
+  const [publicKeyVal, setPublicKeyVal] = useState('');
   const [saltVal, setSaltVal] = useState<Uint8Array>();
   const [ivVal, setIvVal] = useState<Uint8Array>();
   const [loadingModal, setLoadingModal] = useState(false);
@@ -47,15 +53,15 @@ export default function Poc() {
     setUsername(e.currentTarget.value);
   };
 
-  const { isLoading, isError, data, refetch } = useQuery<ILoginResponse>(
+  const { isLoading, isError, refetch } = useQuery<ILoginResponse>(
     QueryKey.LOGIN,
     () =>
       postLoginUser({
         id: username,
-        salt: uint8ArrayToString(saltVal!),
-        iv: uint8ArrayToString(ivVal!),
-        publicKey,
-        encryptedPrivateKey,
+        salt: arrayBufferToBase64(saltVal!),
+        iv: arrayBufferToBase64(ivVal!),
+        publicKey: publicKeyVal,
+        encryptedPrivateKey: encryptedPrivateKeyVal,
         role,
       }),
     {
@@ -65,8 +71,8 @@ export default function Poc() {
   );
   useEffect(() => {
     if (
-      publicKey &&
-      encryptedPrivateKey &&
+      publicKeyVal &&
+      encryptedPrivateKeyVal &&
       username &&
       saltVal &&
       role &&
@@ -74,58 +80,69 @@ export default function Poc() {
     ) {
       refetch()
         .then((res) => {
+          setLoadingModal(false);
+          setGoNext(false);
           if (res.isError) {
-            setGoNext(false);
             window.alert('cannot go forward');
           } else if (res.isSuccess) {
-            setGoNext(false);
             console.log(res.data);
-            dispatch(setSalt(uint8ArrayToString(saltVal!)));
-            dispatch(setIV(uint8ArrayToString(ivVal!)));
-            dispatch(setUserID(username));
+            // simulate login and sync browser data to backend. if the user exist, it will omit whatever keys that are generated on the browser
+            dispatch(setSalt(res.data.salt));
+            dispatch(setIV(res.data.iv));
+            dispatch(setUserID(res.data.id));
+            dispatch(setPublicKey(res.data.publicKey));
             routerHistory.push('/dashboard');
           } else {
-            setGoNext(false);
             window.alert('cannot go somewhat');
           }
         })
         .catch((err) => {
+          setLoadingModal(false);
           setGoNext(false);
           window.alert(`login failed with error ${err}`);
         });
     }
-  }, [publicKey, encryptedPrivateKey, username, saltVal, role, goNext]);
+  }, [publicKeyVal, encryptedPrivateKeyVal, username, saltVal, role, goNext]);
+
+  const validateInput = () => {
+    if (!username || !password || !role) {
+      return false;
+    }
+    return true;
+  };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const keys = (await generateAsymKeyPair()) as ReturnData;
+    if (!validateInput()) {
+      window.alert(`Enter required files`);
+      return;
+    }
+    const asymmetricKeyPair = await generateAsymmetricKey();
     const newSalt = generateSalt();
     const newIV = generateIV();
     setSaltVal(newSalt);
     setIvVal(newIV);
+    const asymmetricKeyPEM = await exportAsymmetricKeyToPEM(asymmetricKeyPair!);
+    console.log('asymmetricKeyPEM');
+    console.log(asymmetricKeyPEM.privateKey);
     const encryptedData = await encryptDataWithPasswordWithScrypt(
       password,
-      keys.privateKey,
+      asymmetricKeyPEM.privateKey,
       newSalt!,
       newIV!
     );
-    setPublicKey(keys.publicKey);
-    setEncryptedPrivateKey(encryptedData);
+    console.log('encryptedData');
+    console.log(encryptedData);
+    setPublicKeyVal(asymmetricKeyPEM.publicKey);
+    setEncryptedPrivateKeyVal(encryptedData);
     setLoadingModal(true);
     setGoNext(true);
   };
 
   if (isLoading || loadingModal) {
-    return <Loading />;
+    return <LoadingClip loading />;
   }
 
-  if (isError) {
-    return <div>isError</div>;
-  }
-
-  if (data) {
-    return <div>done</div>;
-  }
   return (
     <MainLayout>
       <div className="w-full flex justify-center my-40">
@@ -145,7 +162,8 @@ export default function Poc() {
             ))}
           </ButtonGroup>
           <Card.Body>
-            <Card.Title>POC Login</Card.Title>
+            <Card.Title>POC Login </Card.Title>
+
             <Form onSubmit={handleLogin}>
               <Form.Group>
                 <Form.Label>Login ID</Form.Label>
@@ -166,6 +184,7 @@ export default function Poc() {
                   onChange={setInputPassword}
                 />
               </Form.Group>
+              {isError && <p className="text-red-500"> Error Login</p>}
               <Button variant="primary" type="submit">
                 Login
               </Button>
