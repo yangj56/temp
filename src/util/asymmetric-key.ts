@@ -51,7 +51,7 @@ export const exportAsymmetricKeyToPEM = async (
     keyPair.publicKey
   );
   return {
-    privateKey: convertBinaryToPem(privateKey, 'RSA PUBLIC KEY'),
+    privateKey: convertBinaryToPem(privateKey, 'RSA PRIVATE KEY'),
     publicKey: convertBinaryToPem(publicKey, 'RSA PUBLIC KEY'),
   };
 };
