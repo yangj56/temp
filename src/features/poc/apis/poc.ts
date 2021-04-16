@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { apiServerCLient } from 'config/api-client';
 import { String } from 'lodash';
 
@@ -176,4 +177,46 @@ export const getExistingUser = async (
   return apiServerCLient.get(`/user/check-user/${userid}`).then((response) => {
     return response.data.data;
   });
+};
+
+export const getFileUploadPresignedUrl = async (
+  filename: string
+): Promise<string> => {
+  return apiServerCLient
+    .get(`/file/upload-url/${filename}`)
+    .then((response) => {
+      return response.data.data;
+    });
+};
+
+export const uploadToS3 = async (file: File) => {
+  const { name, type } = file;
+  const presignedUploadUrl = await getFileUploadPresignedUrl(name);
+  console.log('type', type);
+  console.log('presigned', presignedUploadUrl);
+
+  // const formData = new FormData();
+  // formData.append('file', file);
+
+  // Upload the image to our pre-signed URL.
+  return axios
+    .post(presignedUploadUrl, file, {
+      headers: {
+        'content-type': type,
+      },
+    })
+    .then((response) => console.log('uploaded succesfullyy', response))
+    .catch((err) => console.log('err', err));
+
+  // const response = await fetch(
+  //   new Request(presignedUploadUrl, {
+  //     method: 'PUT',
+  //     body: file,
+  //     headers: new Headers({
+  //       'Content-Type': type,
+  //     }),
+  //   })
+  // );
+
+  // console.log('res', response);
 };
