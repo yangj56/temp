@@ -26,7 +26,7 @@ export function FileURL() {
                             Mobile Number
                         </div>
                         <div style={{ width:'50%', background:'#ffffff' }}> 
-                            <input type="text" name="Enter Mobile Number" style={{ boxSizing: 'border-box', border: 'solid 1px', borderRadius: '4px' }}/>
+                            <input type="text" name="Enter Mobile Number" style={{ paddingLeft:'10px', boxSizing: 'border-box', border: 'solid 1px', borderRadius: '4px' }}/>
                         </div>
                     </div>
                     <div style={{ width:'100%', background:'#ffffff', display:'flex', flexDirection:'row', marginBottom:'20px', paddingLeft:'20px' }}> 
@@ -34,7 +34,7 @@ export function FileURL() {
                             One-Time Password
                         </div>
                         <div style={{ width:'50%', background:'#ffffff' }}> 
-                            <input type="text" name="Enter Mobile Number" style={{ boxSizing: borderBox, border: 'solid 1px', borderRadius: '4px' }}/>
+                            <input type="text" name="Enter Mobile Number" style={{ paddingLeft:'10px', boxSizing: borderBox, border: 'solid 1px', borderRadius: '4px' }}/>
                         </div>
                     </div>
                     <div style={{ width:'100%', background:'#ffffff', display:'flex', flexDirection:'row', marginBottom:'20px', paddingLeft:'20px' }}> 
@@ -46,7 +46,7 @@ export function FileURL() {
                 </div>
             </div>
            
-            <div style={{ display:'flex', justifyContent:'center', marginTop:'30px', marginBottom:'200px' }} > </div>
+            <div style={{ display:'flex', justifyContent:'center', marginTop:'30px' }} > </div>
         </div>
        
     )
