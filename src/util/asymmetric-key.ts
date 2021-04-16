@@ -1,6 +1,7 @@
 import {
   arrayBufferToBase64,
   arrayBufferToText,
+  base64StringToArrayBuffer,
   convertBinaryToPem,
   convertPemToBinary,
   textToArrayBuffer,
@@ -51,7 +52,7 @@ export const exportAsymmetricKeyToPEM = async (
     keyPair.publicKey
   );
   return {
-    privateKey: convertBinaryToPem(privateKey, 'RSA PUBLIC KEY'),
+    privateKey: convertBinaryToPem(privateKey, 'RSA PRIVATE KEY'),
     publicKey: convertBinaryToPem(publicKey, 'RSA PUBLIC KEY'),
   };
 };
@@ -122,7 +123,7 @@ export const decryptWithCryptoKey = async (key: CryptoKey, data: string) => {
         name: ALGORITHM,
       },
       key,
-      textToArrayBuffer(data)
+      base64StringToArrayBuffer(data)
     );
     return arrayBufferToText(decryptedBuffer);
   } catch (err) {

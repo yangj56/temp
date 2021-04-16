@@ -23,6 +23,7 @@ export interface IAddKeyInput {
   userId: string;
   fileId: string;
   encryptedDataKey: string;
+  iv: string;
 }
 
 export interface IAddKeyResponse {
@@ -162,7 +163,7 @@ export const getEncryptedDataKey = async (
   userId = ''
 ): Promise<IEncryptedDataKeyResponse> => {
   return apiServerCLient
-    .get(`/key?fileId=${fileId}&userId=${userId}`)
+    .get(`/user/key?fileId=${fileId}&userId=${userId}`)
     .then((response) => {
       return response.data.data;
     });

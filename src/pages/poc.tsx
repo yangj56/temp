@@ -145,54 +145,51 @@ export default function Poc() {
   }
 
   return (
-    <MainLayout>
-      <div className="w-full flex justify-center my-40">
-        <Card style={{ width: '18rem' }}>
-          <ButtonGroup toggle>
-            {radios.map((radio, index) => (
-              <ToggleButton
-                key={index}
-                type="radio"
-                name="radio"
-                value={radio.value}
-                checked={role === radio.value}
-                onChange={(e) => dispatch(setRole(e.currentTarget.value))}
-              >
-                {radio.name}
-              </ToggleButton>
-            ))}
-          </ButtonGroup>
-          <Card.Body>
-            <Card.Title>POC Login </Card.Title>
+    <div className="w-full flex justify-center my-40">
+      <Card style={{ width: '18rem' }}>
+        <ButtonGroup toggle>
+          {radios.map((radio, index) => (
+            <ToggleButton
+              key={index}
+              type="radio"
+              name="radio"
+              value={radio.value}
+              checked={role === radio.value}
+              onChange={(e) => dispatch(setRole(e.currentTarget.value))}
+            >
+              {radio.name}
+            </ToggleButton>
+          ))}
+        </ButtonGroup>
+        <Card.Body>
+          <Card.Title>POC Login </Card.Title>
+          <Form onSubmit={handleLogin}>
+            <Form.Group>
+              <Form.Label>Login ID</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter ID"
+                id="username"
+                onChange={setInputUserName}
+              />
+            </Form.Group>
 
-            <Form onSubmit={handleLogin}>
-              <Form.Group>
-                <Form.Label>Login ID</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter ID"
-                  id="username"
-                  onChange={setInputUserName}
-                />
-              </Form.Group>
-
-              <Form.Group>
-                <Form.Label>Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  placeholder="Password"
-                  id="password"
-                  onChange={setInputPassword}
-                />
-              </Form.Group>
-              {isError && <p className="text-red-500"> Error Login</p>}
-              <Button variant="primary" type="submit">
-                Login
-              </Button>
-            </Form>
-          </Card.Body>
-        </Card>
-      </div>
-    </MainLayout>
+            <Form.Group>
+              <Form.Label>Password</Form.Label>
+              <Form.Control
+                type="password"
+                placeholder="Password"
+                id="password"
+                onChange={setInputPassword}
+              />
+            </Form.Group>
+            {isError && <p className="text-red-500"> Error Login</p>}
+            <Button variant="primary" type="submit">
+              Login
+            </Button>
+          </Form>
+        </Card.Body>
+      </Card>
+    </div>
   );
 }
