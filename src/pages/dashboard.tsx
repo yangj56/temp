@@ -1,8 +1,8 @@
 /* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable no-console */
 /* eslint-disable no-alert */
-import { MainLayout } from 'common/layout/main';
-import { Loading } from 'components/skeleton-loader/loading';
+import { Secondary } from 'common/layout/secondary';
+import { LoadingSpinner } from 'components/modal/loading';
 import { QueryKey, Role } from 'contants';
 import {
   addEncryptedDataKey,
@@ -12,49 +12,42 @@ import {
   getUserEncryptedPrivateKey,
   getUserPublicKeyAndFileDatakey,
   IFileResponse,
-  uploadEncryptedFile,
   uploadToS3,
 } from 'features/poc/apis/poc';
+import AppStateList from 'features/poc/components/appstate-list';
 import {
   selectIV,
+  selectPublicKey,
   selectRole,
   selectSalt,
   selectUserID,
-  selectPublicKey,
-  setSalt,
   setIV,
-  setUserID,
   setPublicKey,
   setRole,
+  setSalt,
+  setUserID,
 } from 'features/poc/slices/user';
 import { useAppSelector } from 'hooks/useSlice';
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, Card, Spinner } from 'react-bootstrap';
 import { useQuery } from 'react-query';
-import {
-  arrayBufferToBase64,
-  base64StringToArrayBuffer,
-  generateIV,
-} from 'util/helper';
-import { decryptDataWithPasswordWithScrypt } from 'util/password-data-key';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from 'store/store';
 import {
   decryptWithCryptoKey,
   encryptWithCryptoKey,
   importPrivateKey,
   importPublicKey,
 } from 'util/asymmetric-key';
+import { base64StringToArrayBuffer, generateIV } from 'util/helper';
+import { decryptDataWithPasswordWithScrypt } from 'util/password-data-key';
 import {
-  generateSymKeyPair,
-  encryptWithSymmetricKey,
   decryptWithSymmetricKey,
-  importSymmtricKey,
+  encryptWithSymmetricKey,
   exportSymmtricKey,
+  generateSymKeyPair,
+  importSymmtricKey,
 } from 'util/symmetric-key';
-
-import { LoadingSpinner } from 'components/modal/loading';
-import AppStateList from 'features/poc/components/appstate-list';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from 'store/store';
 
 export interface IFile {
   id: string;
@@ -340,7 +333,7 @@ export default function Dashboard() {
     : null;
 
   return (
-    <MainLayout>
+    <Secondary>
       {loadingUpload && (
         <div className="flex flex-row items-center mt-2 p-2">
           <h3 className="mx-2">Uploading</h3>
@@ -373,6 +366,6 @@ export default function Dashboard() {
         {fileComponents}
       </div>
       <AppStateList />
-    </MainLayout>
+    </Secondary>
   );
 }

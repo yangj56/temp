@@ -9,6 +9,7 @@ export enum WebPage {
   SUBPAGE2 = '/subpage2',
   DASHBOARD = '/dashboard',
   FILEURL = '/file-url',
+  ESERVICES = '/eservice',
 }
 
 export type INavDropdownItem = {
@@ -53,10 +54,6 @@ export const navItems: INavItem[] = [
   {
     title: 'Login (Public)',
     slug: WebPage.LOGIN_PUBLIC,
-  },
-  {
-    title: 'File-URL',
-    slug: WebPage.FILEURL,
   },
 ];
 

@@ -43,8 +43,8 @@ export function LoginAgency() {
         </div>
         <Login
           role={Role.AGENCY}
-          title="Login with AED"
-          placeholder="Enter AED ID"
+          title="Login with AAD"
+          placeholder="Enter AAD ID"
         />
       </div>
       <AppStateList />

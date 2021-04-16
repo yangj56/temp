@@ -10,7 +10,11 @@ import {
   IUserResponse,
   postLoginUser,
 } from 'features/poc/apis/poc';
-import { insertAppState, selectAppState } from 'features/poc/slices/user';
+import {
+  insertAppState,
+  selectAppState,
+  setRole,
+} from 'features/poc/slices/user';
 import { useAppSelector } from 'hooks/useSlice';
 import { useEffect, useState } from 'react';
 import {
@@ -105,6 +109,10 @@ export function Login({ role, title, placeholder }: Props) {
   );
 
   useEffect(() => {
+    dispatch(setRole(role));
+  }, []);
+
+  useEffect(() => {
     if (goNext) {
       dispatchAppState(AppState.UPLOADING_ENCRYPTED_PRIVATE_KEY);
       createLoginUser({})
@@ -115,7 +123,7 @@ export function Login({ role, title, placeholder }: Props) {
             window.alert('Error in creating user');
           } else if (res.isSuccess) {
             console.log(res.data);
-            routerHistory.push(`/dashboard?userid=${username}`);
+            routerHistory.push(`/eservice?userid=${username}`);
           } else {
             window.alert('Error in creating user');
           }
@@ -138,7 +146,7 @@ export function Login({ role, title, placeholder }: Props) {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateInput()) {
-      window.alert(`Enter required files`);
+      window.alert('Missing data');
       return;
     }
 
@@ -150,7 +158,7 @@ export function Login({ role, title, placeholder }: Props) {
           );
           return;
         }
-        routerHistory.push(`/dashboard?userid=${username}`);
+        routerHistory.push(`/eservice?userid=${username}`);
         return;
       }
       setShowPassphrase(true);

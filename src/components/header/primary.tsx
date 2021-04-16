@@ -7,7 +7,7 @@ type Props = {
   icon?: JSX.Element;
 };
 
-export const Header = ({ headerTitle, icon }: Props) => {
+export const PrimaryHeader = ({ headerTitle, icon }: Props) => {
   const navComponents = navItems.map(
     ({ dropdownItems, title, id = '', slug }, index) => {
       if (dropdownItems && dropdownItems.length > 0) {
@@ -46,7 +46,7 @@ export const Header = ({ headerTitle, icon }: Props) => {
     <Navbar expand="lg" className="bg-gray-300 flex justify-between px-5">
       <div>
         {(icon || headerTitle) && (
-          <Navbar.Brand href="#home">{icon || headerTitle}</Navbar.Brand>
+          <Navbar.Brand href="/">{icon || headerTitle}</Navbar.Brand>
         )}
       </div>
       <div>
