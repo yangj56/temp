@@ -1,5 +1,3 @@
-import { MainLayout } from 'common/layout/main';
-import { Loading } from 'components/skeleton-loader/loading';
 import icaLogo from '../assets/ica_mobile_logo.svg';
 
 export function FileURL() {
@@ -19,10 +17,6 @@ export function FileURL() {
       <div
         style={{
           display: 'flex',
-          background: '#999999',
-          height: '60px',
-          justifyContent: 'center',
-          alignItems: 'center',
         }}
       >
         <div

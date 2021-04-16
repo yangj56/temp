@@ -1,13 +1,17 @@
+/* eslint-disable security/detect-possible-timing-attacks */
 /* eslint-disable no-console */
 /* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable no-alert */
-import { LoadingClip } from 'components/modal/loading';
-import { QueryKey, Role } from 'contants';
+import { LoadingSpinner } from 'components/modal/loading';
+import { AppState, QueryKey, Role } from 'contants';
 import {
-  checkUserExit,
+  getExistingUser,
   ILoginResponse,
+  IUserResponse,
   postLoginUser,
 } from 'features/poc/apis/poc';
+import { insertAppState, selectAppState } from 'features/poc/slices/user';
+import { useAppSelector } from 'hooks/useSlice';
 import { useEffect, useState } from 'react';
 import {
   Button,
@@ -18,7 +22,9 @@ import {
   Modal,
 } from 'react-bootstrap';
 import { useQuery } from 'react-query';
+import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router';
+import { AppDispatch } from 'store/store';
 import {
   exportAsymmetricKeyToPEM,
   generateAsymmetricKey,
@@ -35,13 +41,16 @@ type Props = {
 export function Login({ role, title, placeholder }: Props) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [password2, setPassword2] = useState('');
   const [encryptedPrivateKeyVal, setEncryptedPrivateKeyVal] = useState('');
   const [publicKeyVal, setPublicKeyVal] = useState('');
   const [saltVal, setSaltVal] = useState<Uint8Array>();
   const [ivVal, setIvVal] = useState<Uint8Array>();
-  const [loadingModal, setLoadingModal] = useState(false);
+  const [showLoadingModal, setShowLoadingModal] = useState(false);
   const [goNext, setGoNext] = useState(false);
   const [showPassphrase, setShowPassphrase] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const appStateVal = useAppSelector(selectAppState);
 
   const routerHistory = useHistory();
 
@@ -49,11 +58,23 @@ export function Login({ role, title, placeholder }: Props) {
     setPassword(e.currentTarget.value);
   };
 
+  const setInputPassword2 = (e: any) => {
+    setPassword2(e.currentTarget.value);
+  };
+
   const setInputUserName = (e: any) => {
     setUsername(e.currentTarget.value);
   };
 
-  const { isLoading, isError, refetch } = useQuery<ILoginResponse>(
+  const dispatchAppState = (appState: string) => {
+    dispatch(insertAppState(appState));
+  };
+
+  const {
+    isLoading: isCreateLoginUserLoading,
+    isError: isCreateLoginUserError,
+    refetch: createLoginUser,
+  } = useQuery<ILoginResponse>(
     QueryKey.LOGIN,
     () =>
       postLoginUser({
@@ -69,23 +90,38 @@ export function Login({ role, title, placeholder }: Props) {
       enabled: false,
     }
   );
+
+  const {
+    isLoading: isCheckUserExistLoading,
+    isError: isCheckUserExistError,
+    refetch: checkUserExist,
+  } = useQuery<IUserResponse | null>(
+    QueryKey.USER_EXIST,
+    () => getExistingUser(username),
+    {
+      cacheTime: 10,
+      enabled: false,
+    }
+  );
+
   useEffect(() => {
     if (goNext) {
-      refetch()
+      dispatchAppState(AppState.UPLOADING_ENCRYPTED_PRIVATE_KEY);
+      createLoginUser({})
         .then((res) => {
-          setLoadingModal(false);
+          setShowLoadingModal(false);
           setGoNext(false);
           if (res.isError) {
-            window.alert('cannot go forward');
+            window.alert('Error in creating user');
           } else if (res.isSuccess) {
             console.log(res.data);
             routerHistory.push(`/dashboard?userid=${username}`);
           } else {
-            window.alert('cannot go somewhat');
+            window.alert('Error in creating user');
           }
         })
         .catch((err) => {
-          setLoadingModal(false);
+          setShowLoadingModal(false);
           setGoNext(false);
           window.alert(`login failed with error ${err}`);
         });
@@ -106,49 +142,68 @@ export function Login({ role, title, placeholder }: Props) {
       return;
     }
 
-    /*
-    check if user exist
-    if yes we can just retrieve all the items from the backend without regenerating a new set of sets
-    if no we will proceed with onboarding (generation of keys and request for master password)
-    */
-    const checkUserExist = await checkUserExit(username);
-    if (checkUserExist) {
-      routerHistory.push(`/dashboard?userid=${username}`);
-      return;
-    }
-    setShowPassphrase(true);
+    await checkUserExist().then((response) => {
+      if (response.data) {
+        if (response.data.role !== role) {
+          window.alert(
+            `Role error: your current role is ${response.data.role}`
+          );
+          return;
+        }
+        routerHistory.push(`/dashboard?userid=${username}`);
+        return;
+      }
+      setShowPassphrase(true);
+    });
   };
 
   const generateKeys = async () => {
-    const asymmetricKeyPair = await generateAsymmetricKey();
-    const newSalt = generateSalt();
-    const newIV = generateIV();
+    try {
+      setShowPassphrase(false);
+      if (password !== password2) {
+        window.alert('password does not match');
+        return;
+      }
+      setShowLoadingModal(true);
+      dispatchAppState(AppState.GENERATE_ASYM_KEY);
+      const asymmetricKeyPair = await generateAsymmetricKey();
+      const newSalt = generateSalt();
+      const newIV = generateIV();
 
-    setSaltVal(newSalt);
-    setIvVal(newIV);
-    const asymmetricKeyPEM = await exportAsymmetricKeyToPEM(asymmetricKeyPair!);
-    console.log('asymmetricKeyPEM');
-    console.log(asymmetricKeyPEM.privateKey);
-    const encryptedData = await encryptDataWithPasswordWithScrypt(
-      password,
-      asymmetricKeyPEM.privateKey,
-      newSalt!,
-      newIV!
-    );
-    console.log('encryptedData');
-    console.log(encryptedData);
-    setPublicKeyVal(asymmetricKeyPEM.publicKey);
-    setEncryptedPrivateKeyVal(encryptedData);
-    setLoadingModal(true);
-    setGoNext(true);
+      setSaltVal(newSalt);
+      setIvVal(newIV);
+      const asymmetricKeyPEM = await exportAsymmetricKeyToPEM(
+        asymmetricKeyPair!
+      );
+      dispatchAppState(asymmetricKeyPEM.privateKey);
+      dispatchAppState(AppState.ENCRYPT_PRIVATE_KEY_WITH_PASSWORD);
+      const encryptedPrivateKey = await encryptDataWithPasswordWithScrypt(
+        password,
+        asymmetricKeyPEM.privateKey,
+        newSalt!,
+        newIV!
+      );
+      dispatchAppState(encryptedPrivateKey);
+      setPublicKeyVal(asymmetricKeyPEM.publicKey);
+      setEncryptedPrivateKeyVal(encryptedPrivateKey);
+      setGoNext(true);
+    } catch (err) {
+      setShowLoadingModal(false);
+      console.log('Error while generating keys');
+      dispatchAppState(`Error while generating keys ${err.message}`);
+    }
   };
-
-  if (isLoading || loadingModal) {
-    return <LoadingClip loading />;
-  }
 
   return (
     <div className="w-full flex justify-center my-20">
+      <LoadingSpinner
+        loading={
+          isCheckUserExistLoading ||
+          isCreateLoginUserLoading ||
+          showLoadingModal
+        }
+        text={appStateVal[appStateVal.length - 1]}
+      />
       <Card style={{ width: '30rem' }}>
         <Card.Body>
           <Form onSubmit={handleLogin}>
@@ -161,7 +216,9 @@ export function Login({ role, title, placeholder }: Props) {
                 onChange={setInputUserName}
               />
             </Form.Group>
-            {isError && <p className="text-red-500"> Error Login</p>}
+            {(isCheckUserExistError || isCreateLoginUserError) && (
+              <p className="text-red-500"> Error Login</p>
+            )}
             <Button variant="danger" type="submit">
               Login
             </Button>
@@ -184,6 +241,17 @@ export function Login({ role, title, placeholder }: Props) {
               id="password"
               aria-describedby="basic-password"
               onChange={setInputPassword}
+              placeholder="Enter the password"
+              type="password"
+            />
+          </InputGroup>
+          <InputGroup style={{ marginTop: 10 }}>
+            <FormControl
+              id="password2"
+              aria-describedby="basic-password"
+              onChange={setInputPassword2}
+              placeholder="Renter the password"
+              type="password"
             />
           </InputGroup>
         </Modal.Body>

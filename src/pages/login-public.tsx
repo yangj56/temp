@@ -1,6 +1,7 @@
 import { Role } from 'contants';
 import { Login } from 'features/poc/components/login';
 import fileSGLogo from 'assets/filesg.svg';
+import AppStateList from 'features/poc/components/appstate-list';
 
 export function LoginPublic() {
   return (
@@ -46,6 +47,7 @@ export function LoginPublic() {
           placeholder="Enter NRIC"
         />
       </div>
+      <AppStateList />
     </div>
   );
 }

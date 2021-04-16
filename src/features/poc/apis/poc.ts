@@ -170,7 +170,7 @@ export const getEncryptedDataKey = async (
 };
 
 // API-9
-export const checkUserExit = async (
+export const getExistingUser = async (
   userid: string
 ): Promise<IUserResponse | null> => {
   return apiServerCLient.get(`/user/check-user/${userid}`).then((response) => {

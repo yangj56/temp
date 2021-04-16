@@ -1,6 +1,7 @@
 import { Role } from 'contants';
 import { Login } from 'features/poc/components/login';
 import icaLogo from 'assets/ica_mobile_logo.svg';
+import AppStateList from 'features/poc/components/appstate-list';
 
 export function LoginAgency() {
   return (
@@ -46,6 +47,7 @@ export function LoginAgency() {
           placeholder="Enter AED ID"
         />
       </div>
+      <AppStateList />
     </div>
   );
 }

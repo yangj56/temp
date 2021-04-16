@@ -20,24 +20,24 @@ export type AsymmetricKeyPairPEM = {
 
 const ALGORITHM = 'RSA-OAEP';
 const SHA = 'SHA-256';
+const MODULUS_LENGTH = 2048;
 
-export const generateAsymmetricKey = async (): Promise<CryptoKeyPair | null> => {
+export const generateAsymmetricKey = async (): Promise<CryptoKeyPair> => {
   try {
-    console.log('Start generateAsymmetricKey');
     return await window.crypto.subtle.generateKey(
       {
         name: ALGORITHM,
-        modulusLength: 2048, // can be 1024, 2048 or 4096
+        modulusLength: MODULUS_LENGTH,
         publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-        hash: { name: SHA }, // or SHA-512
+        hash: { name: SHA },
       },
       true,
       ['encrypt', 'decrypt']
     );
   } catch (err) {
     console.log('error in creating asymmetric key pair ');
+    throw err;
   }
-  return null;
 };
 
 export const exportAsymmetricKeyToPEM = async (
@@ -57,9 +57,7 @@ export const exportAsymmetricKeyToPEM = async (
   };
 };
 
-export const importPublicKey = async (
-  pemKey: string
-): Promise<CryptoKey | null> => {
+export const importPublicKey = async (pemKey: string): Promise<CryptoKey> => {
   try {
     return await crypto.subtle.importKey(
       'spki',
@@ -73,13 +71,11 @@ export const importPublicKey = async (
     );
   } catch (err) {
     console.log('error in importing asymmetric public key');
-    return null;
+    throw err;
   }
 };
 
-export const importPrivateKey = async (
-  pemKey: string
-): Promise<CryptoKey | null> => {
+export const importPrivateKey = async (pemKey: string): Promise<CryptoKey> => {
   try {
     return await crypto.subtle.importKey(
       'pkcs8',
@@ -93,14 +89,14 @@ export const importPrivateKey = async (
     );
   } catch (err) {
     console.log('error in importing asymmetric private key');
-    return null;
+    throw err;
   }
 };
 
 export const encryptWithCryptoKey = async (
   key: CryptoKey,
   data: string
-): Promise<string | null> => {
+): Promise<string> => {
   try {
     const encryptedBuffer = await crypto.subtle.encrypt(
       {
@@ -112,7 +108,7 @@ export const encryptWithCryptoKey = async (
     return arrayBufferToBase64(encryptedBuffer);
   } catch (err) {
     console.log('error in encrypting with asymmetric key');
-    return null;
+    throw err;
   }
 };
 
@@ -128,6 +124,6 @@ export const decryptWithCryptoKey = async (key: CryptoKey, data: string) => {
     return arrayBufferToText(decryptedBuffer);
   } catch (err) {
     console.log('error in decrypting with asymmetric key');
-    return null;
+    throw err;
   }
 };

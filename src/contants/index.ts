@@ -64,9 +64,25 @@ export enum QueryKey {
   USER_LIST = 'user_list',
   LOGIN = 'login',
   ALL_FILE = 'all_file',
+  USER_EXIST = 'user_exist',
 }
 
 export enum Role {
   PUBLIC = 'user',
   AGENCY = 'agency',
+}
+
+export enum AppState {
+  GENERATE_DATA_KEY = 'Generating Data key',
+  GENERATE_ASYM_KEY = 'Generating asymmetric key',
+  ENCRYPT_PRIVATE_KEY_WITH_PASSWORD = 'Encrypting your private key',
+  DECRYPT_PRIVATE_KEY_PASSWORD = 'Decrypting your private key',
+  ENCRYPT_FILE = 'Encrypting your file',
+  DECRYPT_FILE = 'Decrypting your file',
+  ENCRYPT_DATA_KEY = 'Encrypting data key',
+  DECRYPT_DATA_KEY = 'Decrypting data key',
+  UPLOADING_ENCRYPTED_PRIVATE_KEY = 'Uploading encrypted private file',
+  UPLOADING_ENCRYPTED_FILE = 'Uploading encrypted file',
+  UPLOADING_ENCRYPTED_DATA_KEY = 'Uploading encrypted data key file',
+  IDLE = 'Idle',
 }

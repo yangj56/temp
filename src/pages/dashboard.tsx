@@ -44,7 +44,8 @@ import {
   importSymmtricKey,
   exportSymmtricKey,
 } from 'util/symmetric-key';
-import { LoadingClip } from 'components/modal/loading';
+import { LoadingSpinner } from 'components/modal/loading';
+import AppStateList from 'features/poc/components/appstate-list';
 
 export interface IFile {
   id: string;
@@ -71,7 +72,7 @@ export default function Dashboard() {
   );
 
   if (isLoading) {
-    return <LoadingClip loading />;
+    return <LoadingSpinner loading />;
   }
 
   const validateInput = () => {
@@ -435,6 +436,7 @@ export default function Dashboard() {
       <div className="flex flex-row flex-wrap justify-between">
         {fileComponents}
       </div>
+      <AppStateList />
     </MainLayout>
   );
 }

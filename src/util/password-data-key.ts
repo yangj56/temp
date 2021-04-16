@@ -13,7 +13,6 @@ const p = 1;
 const dkLen = 32;
 
 const ALGORITHM = 'AES-GCM';
-const SHA = 'SHA-256';
 
 export const encryptDataWithPasswordWithScrypt = async (
   password: string,
@@ -45,10 +44,10 @@ export const encryptDataWithPasswordWithScrypt = async (
       dataBuffer
     );
     return arrayBufferToBase64(cipherData);
-  } catch (e) {
-    console.log(`Error occur while encryting data ${e}`);
+  } catch (err) {
+    console.log(`Error occur while encryting data ${err}`);
+    throw err;
   }
-  return 'error';
 };
 
 export const decryptDataWithPasswordWithScrypt = async (
@@ -72,7 +71,6 @@ export const decryptDataWithPasswordWithScrypt = async (
       true,
       ['encrypt', 'decrypt']
     );
-    console.log('--------------decrypting---------');
     const data = await window.crypto.subtle.decrypt(
       {
         name: ALGORITHM,
@@ -82,8 +80,8 @@ export const decryptDataWithPasswordWithScrypt = async (
       cipherDataBuffer
     );
     return arrayBufferToText(data);
-  } catch (e) {
-    console.log(`Error occur while decrypting data ${e}`);
+  } catch (err) {
+    console.log(`Error occur while decrypting data ${err}`);
+    throw err;
   }
-  return 'error';
 };
