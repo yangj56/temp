@@ -41,7 +41,7 @@ export function LoginPublic() {
           </div>
         </div>
         <Login
-          role={Role.AGENCY}
+          role={Role.PUBLIC}
           title="Login with Singpass"
           placeholder="Enter NRIC"
         />
