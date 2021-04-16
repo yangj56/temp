@@ -109,7 +109,7 @@ export default function Dashboard() {
     const importedPrivateKey = await importPrivateKey(privateKeyString);
 
     // 4. Get encrypted file
-    const encryptedFile: Blob = await getEncryptedFile(fileID);
+    const responseData = await getEncryptedFile(fileID);
 
     // 5. Get encrypted data key and iv with userId and fileId
     const { key: encryptedDataKey, iv: fileIV } = (
@@ -126,25 +126,34 @@ export default function Dashboard() {
     console.log('importedPrivateKey', importedPrivateKey!);
     console.log('encryptedDataKey', encryptedDataKey);
 
-    // // 7. Import the base64 data key into CryptoKey
-    // const importedDataKey = await importSymmtricKey(dataKeyInBase64!);
+    // 7. Import the base64 data key into CryptoKey
+    const importedDataKey = await importSymmtricKey(dataKeyInBase64!);
 
-    // // 8. Convert the file back to text
-    // const dataInText = await encryptedFile.text();
+    // 8. Convert the file back to text
+    const dataInBuffer: ArrayBuffer = await responseData.data.arrayBuffer();
 
-    // // 9. Decrypt the file with the data key and iv
-    // const decryptedFile = await decryptWithSymmetricKey(
-    //   importedDataKey!,
-    //   dataInText,
-    //   fileIvVal
-    // );
+    console.log('dataInBuffer');
+    console.log(dataInBuffer);
 
-    // // 10. Convert the file string back to Blob
-    // const dataFile = new File([decryptedFile!], 'lala.png', {
-    //   type: 'application/pdf',
-    // });
+    // 9. Decrypt the file with the data key and iv
+    const decryptedFile = await decryptWithSymmetricKey(
+      importedDataKey!,
+      dataInBuffer,
+      fileIvVal
+    );
 
-    // console.log('datafile', dataFile);
+    // 10. Convert the file string back to Blob
+    const dataFile = new File([decryptedFile!], 'lala.pdf', {
+      type: 'application/pdf',
+    });
+
+    console.log('datafile', dataFile);
+    const url = window.URL.createObjectURL(dataFile);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'loli.pdf');
+    document.body.appendChild(link);
+    link.click();
 
     // console.log('privateKeyString');
     // console.log(privateKeyString);
@@ -229,44 +238,38 @@ export default function Dashboard() {
     /**
      * Test decrypt on the spot
      */
-    const {
-      encryptedPrivateKey: userEncryptedPrivateKey,
-    } = await getUserEncryptedPrivateKey('user-2');
+    // const {
+    //   encryptedPrivateKey: userEncryptedPrivateKey,
+    // } = await getUserEncryptedPrivateKey('user-2');
 
-    const userSaltUint = base64StringToArrayBuffer(
-      'K3WRLjFjOpWQWkJXf7eeWA=='
-    ) as Uint8Array;
-    const userIvUint = base64StringToArrayBuffer(
-      '7JHgc6Wa9H2FLQcd'
-    ) as Uint8Array;
-    const userPrivateKeyString = await decryptDataWithPasswordWithScrypt(
-      'user-2pw',
-      userEncryptedPrivateKey,
-      saltUint,
-      ivUint
-    );
-    console.log('userPrivateKeyString', userPrivateKeyString);
+    // const userPrivateKeyString = await decryptDataWithPasswordWithScrypt(
+    //   'user-2pw',
+    //   userEncryptedPrivateKey,
+    //   saltUint,
+    //   ivUint
+    // );
+    // console.log('userPrivateKeyString', userPrivateKeyString);
 
-    const importedUserPrivateKey = await importPrivateKey(userPrivateKeyString);
-    const dataKeyInBase64 = await decryptWithCryptoKey(
-      importedUserPrivateKey!,
-      receiverEncryptedDataKey!
-    );
-    console.log('datakey after decrypt', dataKeyInBase64);
+    // const importedUserPrivateKey = await importPrivateKey(userPrivateKeyString);
+    // const dataKeyInBase64 = await decryptWithCryptoKey(
+    //   importedUserPrivateKey!,
+    //   receiverEncryptedDataKey!
+    // );
+    // console.log('datakey after decrypt', dataKeyInBase64);
 
     /**
      * End Test
      */
 
-    // const res = await addEncryptedDataKey({
-    //   encryptedDataKey: receiverEncryptedDataKey!,
-    //   fileId: fileID,
-    //   userId: receiverId!,
-    //   iv: response.iv,
-    // });
+    const res = await addEncryptedDataKey({
+      encryptedDataKey: receiverEncryptedDataKey!,
+      fileId: fileID,
+      userId: receiverId!,
+      iv: response.iv,
+    });
 
     console.log('finished sharing');
-    // console.log(res);
+    console.log(res);
   };
 
   const handleUploadAction = () => {
@@ -286,13 +289,14 @@ export default function Dashboard() {
 
     const dataIv = generateIV(); // Generate IV
     const dataKey = (await generateSymKeyPair())!; // Generate data key (symmetric key)
-    const dataInText = await file.text(); // Convert the entire file where contents are interpreted as UTF-8 text
+    const dataInBuffer = await file.arrayBuffer(); // Convert the entire file where contents are interpreted as UTF-8 text
     // Encrypt the file with data key and iv
     const encryptedData = (await encryptWithSymmetricKey(
       dataKey,
-      dataInText,
+      dataInBuffer,
       dataIv
     ))!;
+    console.log('old dataInText', dataInBuffer);
 
     const importedPublicKey = (await importPublicKey(publicKey))!; // Import the public key into CryptoKey
     const exportedDataKey = (await exportSymmtricKey(dataKey))!; // Export the data key to be encrypted into base64
@@ -307,41 +311,61 @@ export default function Dashboard() {
     /**
      * Test decrypt on the spot
      */
-    const {
-      encryptedPrivateKey: userEncryptedPrivateKey,
-    } = await getUserEncryptedPrivateKey(userid!);
+    // const {
+    //   encryptedPrivateKey: userEncryptedPrivateKey,
+    // } = await getUserEncryptedPrivateKey(userid!);
 
-    const userSaltUint = base64StringToArrayBuffer(salt) as Uint8Array;
-    const userIvUint = base64StringToArrayBuffer(iv) as Uint8Array;
-    const userPrivateKeyString = await decryptDataWithPasswordWithScrypt(
-      'agency-2pw',
-      userEncryptedPrivateKey,
-      userSaltUint,
-      userIvUint
-    );
-    console.log('userPrivateKeyString', userPrivateKeyString);
+    // const userSaltUint = base64StringToArrayBuffer(salt) as Uint8Array;
+    // const userIvUint = base64StringToArrayBuffer(iv) as Uint8Array;
+    // const userPrivateKeyString = await decryptDataWithPasswordWithScrypt(
+    //   '123123',
+    //   userEncryptedPrivateKey,
+    //   userSaltUint,
+    //   userIvUint
+    // );
+    // console.log('userPrivateKeyString', userPrivateKeyString);
 
-    const importedUserPrivateKey = await importPrivateKey(userPrivateKeyString);
-    const dataKeyInBase64 = await decryptWithCryptoKey(
-      importedUserPrivateKey!,
-      encryptedDataKey!
-    );
-    console.log('datakey after decrypt', dataKeyInBase64);
+    // const importedUserPrivateKey = await importPrivateKey(userPrivateKeyString);
+    // const dataKeyInBase64 = await decryptWithCryptoKey(
+    //   importedUserPrivateKey!,
+    //   encryptedDataKey!
+    // );
+    // console.log('datakey after decrypt', dataKeyInBase64);
 
-    /**
-     * End Test
-     */
+    // // 9. Decrypt the file with the data key and iv
+    // const decryptedFile = await decryptWithSymmetricKey(
+    //   dataKey!,
+    //   encryptedData,
+    //   dataIv
+    // );
+
+    // console.log('new dataInText', decryptedFile);
+
+    // const dataFile = new File([decryptedFile!], 'lala.pdf', {
+    //   type: 'application/pdf',
+    // });
+
+    // const url = window.URL.createObjectURL(dataFile);
+    // const link = document.createElement('a');
+    // link.href = url;
+    // link.setAttribute('download', 'loli.pdf');
+    // document.body.appendChild(link);
+    // link.click();
+
+    // /**
+    //  * End Test
+    //  */
 
     // Convert the encrypted file (text) back to Blob
-    // const encryptedDataBuffer = base64StringToArrayBuffer(encryptedData!);
-    // const encryptedDataBlob = new Blob([new Uint8Array(encryptedDataBuffer)]);
+    const encryptedDataBuffer = base64StringToArrayBuffer(encryptedData!);
+    const encryptedDataBlob = new Blob([new Uint8Array(encryptedDataBuffer)]);
 
-    // const formData = new FormData();
-    // formData.append('file', new File([encryptedDataBlob], name, { type }));
-    // formData.append('userId', userid);
-    // formData.append('encryptedDataKey', encryptedDataKey);
-    // formData.append('iv', arrayBufferToBase64(dataIv));
-    // uploadEncryptedFile(formData);
+    const formData = new FormData();
+    formData.append('file', new File([encryptedDataBlob], name, { type }));
+    formData.append('userId', userid);
+    formData.append('encryptedDataKey', encryptedDataKey);
+    formData.append('iv', arrayBufferToBase64(dataIv));
+    uploadEncryptedFile(formData);
   };
 
   const handleFileOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {

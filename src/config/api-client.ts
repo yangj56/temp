@@ -9,5 +9,5 @@ export const apiCLient = axios.create({
 
 export const apiServerCLient = axios.create({
   baseURL: `${config.serverUrl}`,
-  timeout: 10000,
+  timeout: 40000,
 });
