@@ -1,33 +1,36 @@
 /* eslint-disable no-console */
 /* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable no-alert */
-import { MainLayout } from 'common/layout/main';
+import { LoadingClip } from 'components/modal/loading';
 import { QueryKey, Role } from 'contants';
-import { useQuery } from 'react-query';
-import { Button, ButtonGroup, Card, Form, ToggleButton } from 'react-bootstrap';
+import {
+  checkUserExit,
+  ILoginResponse,
+  postLoginUser,
+} from 'features/poc/apis/poc';
 import { useEffect, useState } from 'react';
-import { ILoginResponse, postLoginUser } from 'features/poc/apis/poc';
+import {
+  Button,
+  Card,
+  Form,
+  FormControl,
+  InputGroup,
+  Modal,
+} from 'react-bootstrap';
+import { useQuery } from 'react-query';
 import { useHistory } from 'react-router';
-import { encryptDataWithPasswordWithScrypt } from 'util/password-data-key';
 import {
   exportAsymmetricKeyToPEM,
   generateAsymmetricKey,
 } from 'util/asymmetric-key';
-import { generateIV, generateSalt, arrayBufferToBase64 } from 'util/helper';
-import { AppDispatch } from 'store/store';
-import { useDispatch } from 'react-redux';
-import {
-  selectRole,
-  setRole,
-  setSalt,
-  setIV,
-  setUserID,
-  setPublicKey,
-} from 'features/poc/slices/user';
-import { useAppSelector } from 'hooks/useSlice';
-import { LoadingClip } from 'components/modal/loading';
+import { arrayBufferToBase64, generateIV, generateSalt } from 'util/helper';
+import { encryptDataWithPasswordWithScrypt } from 'util/password-data-key';
 
-export default function Poc() {
+type Props = {
+  role: Role;
+};
+
+export function Login({ role }: Props) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [encryptedPrivateKeyVal, setEncryptedPrivateKeyVal] = useState('');
@@ -36,14 +39,9 @@ export default function Poc() {
   const [ivVal, setIvVal] = useState<Uint8Array>();
   const [loadingModal, setLoadingModal] = useState(false);
   const [goNext, setGoNext] = useState(false);
-  const routerHistory = useHistory();
-  const dispatch = useDispatch<AppDispatch>();
-  const role = useAppSelector(selectRole);
+  const [showPassphrase, setShowPassphrase] = useState(false);
 
-  const radios = [
-    { name: Role.AGENCY, value: Role.AGENCY },
-    { name: Role.PUBLIC, value: Role.PUBLIC },
-  ];
+  const routerHistory = useHistory();
 
   const setInputPassword = (e: any) => {
     setPassword(e.currentTarget.value);
@@ -58,10 +56,10 @@ export default function Poc() {
     () =>
       postLoginUser({
         id: username,
-        salt: arrayBufferToBase64(saltVal!),
-        iv: arrayBufferToBase64(ivVal!),
-        publicKey: publicKeyVal,
-        encryptedPrivateKey: encryptedPrivateKeyVal,
+        salt: saltVal ? arrayBufferToBase64(saltVal!) : '',
+        iv: ivVal ? arrayBufferToBase64(ivVal!) : '',
+        publicKey: publicKeyVal || '',
+        encryptedPrivateKey: encryptedPrivateKeyVal || '',
         role,
       }),
     {
@@ -70,14 +68,7 @@ export default function Poc() {
     }
   );
   useEffect(() => {
-    if (
-      publicKeyVal &&
-      encryptedPrivateKeyVal &&
-      username &&
-      saltVal &&
-      role &&
-      goNext
-    ) {
+    if (goNext) {
       refetch()
         .then((res) => {
           setLoadingModal(false);
@@ -86,12 +77,7 @@ export default function Poc() {
             window.alert('cannot go forward');
           } else if (res.isSuccess) {
             console.log(res.data);
-            // simulate login and sync browser data to backend. if the user exist, it will omit whatever keys that are generated on the browser
-            dispatch(setSalt(res.data.salt));
-            dispatch(setIV(res.data.iv));
-            dispatch(setUserID(res.data.id));
-            dispatch(setPublicKey(res.data.publicKey));
-            routerHistory.push('/dashboard');
+            routerHistory.push(`/dashboard?userid=${username}`);
           } else {
             window.alert('cannot go somewhat');
           }
@@ -102,10 +88,10 @@ export default function Poc() {
           window.alert(`login failed with error ${err}`);
         });
     }
-  }, [publicKeyVal, encryptedPrivateKeyVal, username, saltVal, role, goNext]);
+  }, [goNext]);
 
   const validateInput = () => {
-    if (!username || !password || !role) {
+    if (!username || !role) {
       return false;
     }
     return true;
@@ -117,6 +103,21 @@ export default function Poc() {
       window.alert(`Enter required files`);
       return;
     }
+
+    /*
+    check if user exist
+    if yes we can just retrieve all the items from the backend without regenerating a new set of sets
+    if no we will proceed with onboarding (generation of keys and request for master password)
+    */
+    const checkUserExist = await checkUserExit(username);
+    if (checkUserExist) {
+      routerHistory.push(`/dashboard?userid=${username}`);
+      return;
+    }
+    setShowPassphrase(true);
+  };
+
+  const generateKeys = async () => {
     const asymmetricKeyPair = await generateAsymmetricKey();
     const newSalt = generateSalt();
     const newIV = generateIV();
@@ -147,22 +148,7 @@ export default function Poc() {
   return (
     <div className="w-full flex justify-center my-40">
       <Card style={{ width: '18rem' }}>
-        <ButtonGroup toggle>
-          {radios.map((radio, index) => (
-            <ToggleButton
-              key={index}
-              type="radio"
-              name="radio"
-              value={radio.value}
-              checked={role === radio.value}
-              onChange={(e) => dispatch(setRole(e.currentTarget.value))}
-            >
-              {radio.name}
-            </ToggleButton>
-          ))}
-        </ButtonGroup>
         <Card.Body>
-          <Card.Title>POC Login </Card.Title>
           <Form onSubmit={handleLogin}>
             <Form.Group>
               <Form.Label>Login ID</Form.Label>
@@ -173,16 +159,6 @@ export default function Poc() {
                 onChange={setInputUserName}
               />
             </Form.Group>
-
-            <Form.Group>
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Password"
-                id="password"
-                onChange={setInputPassword}
-              />
-            </Form.Group>
             {isError && <p className="text-red-500"> Error Login</p>}
             <Button variant="primary" type="submit">
               Login
@@ -190,6 +166,39 @@ export default function Poc() {
           </Form>
         </Card.Body>
       </Card>
+      <Modal
+        show={showPassphrase}
+        onHide={() => {
+          setShowPassphrase(false);
+        }}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Please enter the master password</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {' '}
+          <InputGroup>
+            <FormControl
+              id="password"
+              aria-describedby="basic-password"
+              onChange={setInputPassword}
+            />
+          </InputGroup>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setShowPassphrase(false);
+            }}
+          >
+            Close
+          </Button>
+          <Button variant="primary" onClick={generateKeys}>
+            Enter
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

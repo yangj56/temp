@@ -3,7 +3,8 @@ export enum WebPage {
   ABOUT = '/about',
   CONTACT = '/contact',
   SPKIE = '/spike',
-  POC = '/poc',
+  LOGIN_AGENCY = '/agency-login',
+  LOGIN_PUBLIC = '/agency-public',
   SUBPAGE1 = '/subpage1',
   SUBPAGE2 = '/subpage2',
   DASHBOARD = '/dashboard',
@@ -30,27 +31,27 @@ export const navItems: INavItem[] = [
     title: 'About',
     slug: WebPage.ABOUT,
   },
+  // {
+  //   title: 'Contact Us',
+  //   id: 'contact-us-subpages',
+  //   dropdownItems: [
+  //     {
+  //       dropdownTitle: 'contact details',
+  //       dropdownSlug: WebPage.CONTACT,
+  //     },
+  //     {
+  //       dropdownTitle: 'subpage 2',
+  //       dropdownSlug: WebPage.SUBPAGE2,
+  //     },
+  //   ],
+  // },
   {
-    title: 'Contact Us',
-    id: 'contact-us-subpages',
-    dropdownItems: [
-      {
-        dropdownTitle: 'contact details',
-        dropdownSlug: WebPage.CONTACT,
-      },
-      {
-        dropdownTitle: 'subpage 2',
-        dropdownSlug: WebPage.SUBPAGE2,
-      },
-    ],
+    title: 'Login (Agency)',
+    slug: WebPage.LOGIN_AGENCY,
   },
   {
-    title: 'Spikes page',
-    slug: WebPage.SPKIE,
-  },
-  {
-    title: 'POC page',
-    slug: WebPage.POC,
+    title: 'Login (Public)',
+    slug: WebPage.LOGIN_PUBLIC,
   },
 ];
 

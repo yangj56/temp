@@ -1,6 +1,7 @@
 import Dashboard from 'pages/dashboard';
-import Poc from 'pages/poc';
-import { BrowserRouter, Switch, Route } from 'react-router-dom';
+import { LoginAgency } from 'pages/login-agency';
+import { LoginPublic } from 'pages/login-public';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import { WebPage } from './contants';
 import { AboutUs } from './pages/about-us';
 import { ContactUs } from './pages/contact-us';
@@ -23,8 +24,11 @@ export function Router(): JSX.Element {
         <Route path={WebPage.SPKIE} exact>
           <Spikes />
         </Route>
-        <Route path={WebPage.POC} exact>
-          <Poc />
+        <Route path={WebPage.LOGIN_AGENCY} exact>
+          <LoginAgency />
+        </Route>
+        <Route path={WebPage.LOGIN_PUBLIC} exact>
+          <LoginPublic />
         </Route>
         <Route path={WebPage.DASHBOARD} exact>
           <Dashboard />

@@ -43,14 +43,18 @@ export const Header = ({ headerTitle, icon }: Props) => {
   );
 
   return (
-    <Navbar expand="lg" className="bg-red-300">
-      {(icon || headerTitle) && (
-        <Navbar.Brand href="#home">{icon || headerTitle}</Navbar.Brand>
-      )}
-      <Navbar.Toggle aria-controls="basic-navbar-nav" />
-      <Navbar.Collapse id="basic-navbar-nav">
-        <Nav className="items-end">{navComponents}</Nav>
-      </Navbar.Collapse>
+    <Navbar expand="lg" className="bg-gray-300 flex justify-between px-5">
+      <div>
+        {(icon || headerTitle) && (
+          <Navbar.Brand href="#home">{icon || headerTitle}</Navbar.Brand>
+        )}
+      </div>
+      <div>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="items-end">{navComponents}</Nav>
+        </Navbar.Collapse>
+      </div>
     </Navbar>
   );
 };

@@ -11,9 +11,9 @@ export function AboutUs(): JSX.Element {
   return (
     <MainLayout>
       <h3 className="text-xl">About us</h3>
-      <Button variant="primary" onClick={() => dispatch(increment())}>
+      {/* <Button variant="primary" onClick={() => dispatch(increment())}>
         Add
-      </Button>
+      </Button> */}
       <CustomizedCarousel carouselItems={carouseItemsData} />
     </MainLayout>
   );

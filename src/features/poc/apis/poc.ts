@@ -168,3 +168,12 @@ export const getEncryptedDataKey = async (
       return response.data.data;
     });
 };
+
+// API-9
+export const checkUserExit = async (
+  userid: string
+): Promise<IUserResponse | null> => {
+  return apiServerCLient.get(`/user/check-user/${userid}`).then((response) => {
+    return response.data.data;
+  });
+};

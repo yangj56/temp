@@ -3,7 +3,7 @@ import { AnnouncementBar } from 'components/annoucement-bar';
 import { Footer } from 'components/footer';
 import { Header } from 'components/header';
 import { PropsWithChildren } from 'react';
-import { FaBeer } from 'react-icons/fa';
+import { FaFileAlt } from 'react-icons/fa';
 
 type Props = {
   showHeader?: boolean;
@@ -13,7 +13,7 @@ export function MainLayout({
   children,
   showHeader = true,
 }: PropsWithChildren<Props>) {
-  const iconComponent = <FaBeer />;
+  const iconComponent = <FaFileAlt />;
   return (
     <LayoutDiv>
       {/* <AnnouncementBar title="This is an annoucement" /> */}

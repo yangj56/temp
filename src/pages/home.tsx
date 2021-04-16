@@ -16,7 +16,7 @@ export function Home() {
   return (
     <MainLayout>
       <h3 className="text-xl">Home</h3>
-      <UserList />
+      {/* <UserList /> */}
       <SingleBanner card={singleBannerData} />
       <MultipleBanner
         cards={[singleBannerData, singleBannerData, singleBannerData]}
