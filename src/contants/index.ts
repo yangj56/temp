@@ -4,11 +4,11 @@ export enum WebPage {
   CONTACT = '/contact',
   SPKIE = '/spike',
   LOGIN_AGENCY = '/agency-login',
-  LOGIN_PUBLIC = '/agency-public',
+  LOGIN_PUBLIC = '/public-login',
   SUBPAGE1 = '/subpage1',
   SUBPAGE2 = '/subpage2',
   DASHBOARD = '/dashboard',
-  FILEURL = '/file-url'
+  FILEURL = '/file-url',
 }
 
 export type INavDropdownItem = {
@@ -56,8 +56,8 @@ export const navItems: INavItem[] = [
   },
   {
     title: 'File-URL',
-    slug: WebPage.FILEURL
-  }
+    slug: WebPage.FILEURL,
+  },
 ];
 
 export enum QueryKey {

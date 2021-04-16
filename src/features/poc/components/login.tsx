@@ -28,9 +28,11 @@ import { encryptDataWithPasswordWithScrypt } from 'util/password-data-key';
 
 type Props = {
   role: Role;
+  title: string;
+  placeholder: string;
 };
 
-export function Login({ role }: Props) {
+export function Login({ role, title, placeholder }: Props) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [encryptedPrivateKeyVal, setEncryptedPrivateKeyVal] = useState('');
@@ -146,21 +148,21 @@ export function Login({ role }: Props) {
   }
 
   return (
-    <div className="w-full flex justify-center my-40">
-      <Card style={{ width: '18rem' }}>
+    <div className="w-full flex justify-center my-20">
+      <Card style={{ width: '30rem' }}>
         <Card.Body>
           <Form onSubmit={handleLogin}>
             <Form.Group>
-              <Form.Label>Login ID</Form.Label>
+              <Form.Label>{title}</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Enter ID"
+                placeholder={placeholder}
                 id="username"
                 onChange={setInputUserName}
               />
             </Form.Group>
             {isError && <p className="text-red-500"> Error Login</p>}
-            <Button variant="primary" type="submit">
+            <Button variant="danger" type="submit">
               Login
             </Button>
           </Form>

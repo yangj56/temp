@@ -1,0 +1,10 @@
+<svg width="150" height="70" xmlns="http://www.w3.org/2000/svg">
+ <g>
+  <title>Layer 1</title>
+  <text style="cursor: move;" stroke-width="0" font-style="normal" font-weight="normal" xml:space="preserve" text-anchor="start" font-family="monospace" font-size="24" id="svg_4" y="202" x="213.5" opacity="undefined" stroke-dasharray="null" stroke="#00ffff" fill="#000000">FILE</text>
+  <text xml:space="preserve" text-anchor="start" font-family="monospace" font-size="24" id="svg_5" y="202" x="271.5" opacity="undefined" stroke-dasharray="null" stroke-width="0" stroke="#000000" fill="#00ffff">SG</text>
+  <text font-weight="bold" xml:space="preserve" text-anchor="start" font-family="monospace" font-size="30" id="svg_8" y="45.5" x="15.5" opacity="undefined" stroke-opacity="null" stroke-dasharray="null" stroke-width="0" stroke="#000000" fill="#0a0909">File</text>
+  <text style="cursor: move;" xml:space="preserve" text-anchor="start" font-family="monospace" font-size="30" id="svg_9" y="45.5" x="89.5" opacity="undefined" stroke-opacity="null" stroke-dasharray="null" stroke-width="0" stroke="#000000" fill="#ff5656">SG</text>
+ </g>
+
+</svg>
