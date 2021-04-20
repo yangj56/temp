@@ -281,3 +281,15 @@ export const uploadToS3 = async (file: File) => {
 
   // console.log('res', response);
 };
+
+export const getSharees = async (userid) => {
+  return apiServerCLient
+    .get(`/user/${userid}`)
+    .then((response) => response.data.data);
+};
+
+export const revokeSharee = async (userid, fileid) => {
+  return apiServerCLient
+    .post(`/user?userid=${userid}&&fileid=${fileid}`)
+    .then((response) => response.data.data);
+};

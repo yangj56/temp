@@ -9,15 +9,18 @@ import {
   getAllFiles,
   getEncryptedDataKey,
   getEncryptedFile,
+  getSharees,
   getUserEncryptedPrivateKey,
   getUserPublicKeyAndFileDatakey,
   IFileResponse,
   postShareFileToPublicUser,
+  revokeSharee,
   uploadEncryptedFile,
   uploadToS3,
 } from 'features/poc/apis/poc';
 import AppStateList from 'features/poc/components/appstate-list';
 import {
+  selectEservice,
   selectIV,
   selectPublicKey,
   selectRole,
@@ -31,7 +34,7 @@ import {
 } from 'features/poc/slices/user';
 import { useAppSelector } from 'hooks/useSlice';
 import { useEffect, useRef, useState } from 'react';
-import { Button, Card, Spinner } from 'react-bootstrap';
+import { Button, Card, PageItem, Spinner } from 'react-bootstrap';
 import { useMutation, useQuery } from 'react-query';
 import {
   arrayBufferToBase64,
@@ -96,16 +99,29 @@ export default function Dashboard() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [userPassword, setUserPassword] = useState('');
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+  const [shareesArr, setShareesArr] = useState<any[]>([
+    {
+      shareUserId: 'test',
+      shareFileId: '123',
+      shareFileName: 'est',
+    },
+    {
+      shareUserId: 'test',
+      shareFileId: '123',
+      shareFileName: 'est',
+    },
+  ]);
 
   const hiddenFileInputRef = useRef<HTMLInputElement | null>(null);
   const dispatch = useDispatch<AppDispatch>();
   const [loadingUpload, setLoadingUpload] = useState(false);
 
-  const role = useAppSelector(selectRole);
+  const role = useAppSelector(selectRole) as Role;
   const userid = useAppSelector(selectUserID);
   const iv = useAppSelector(selectIV);
   const salt = useAppSelector(selectSalt);
   const publicKey = useAppSelector(selectPublicKey);
+  const eservice = useAppSelector(selectEservice);
 
   const { isLoading, isError, data, refetch: fetchAllFiles } = useQuery<
     IFileResponse[]
@@ -437,6 +453,15 @@ export default function Dashboard() {
     e.target.value = '';
   };
 
+  const handleGetSharees = async () => {
+    const sharees = await getSharees(userid);
+    setShareesArr(sharees);
+  };
+
+  const handleRevoke = async (revokeUserid: string, fileid: string) => {
+    return revokeSharee(revokeUserid, fileid);
+  };
+
   const fileComponents = data
     ? data.map((item, index) => (
         <FileCard
@@ -446,6 +471,7 @@ export default function Dashboard() {
           onShare={() => handleShareAction(item.id)}
           role={role}
           key={`dashboard-card-${index}`}
+          onGetSharees={() => handleGetSharees()}
         />
       ))
     : null;
@@ -514,6 +540,25 @@ export default function Dashboard() {
             <a href={shareFileToPublicUserData.fileShareLoginURL}>click here</a>{' '}
             to view your shared file. PIN: {shareFileToPublicUserData.pin}
           </p>
+        </TextModal>
+      )}
+      {shareesArr.length > 0 && (
+        <TextModal
+          show={shareesArr.length > 0}
+          title="Show Sharees"
+          onClose={() => setShareesArr([])}
+        >
+          {shareesArr.map(({ shareUserId, shareFileId, shareFileName }) => (
+            <div className="flex mb-5">
+              <p className="mr-5">{shareFileName}</p>
+              <Button
+                variant="primary"
+                onClick={() => handleRevoke(shareUserId, shareFileId)}
+              >
+                Revoke Access
+              </Button>
+            </div>
+          ))}
         </TextModal>
       )}
       {isGlobalLoading && <LoadingSpinner loading />}

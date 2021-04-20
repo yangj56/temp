@@ -14,6 +14,11 @@ export enum WebPage {
   LOGIN_FILE_SHARE = '/file-share-login',
 }
 
+export enum Eservice {
+  BIRTH_REG = 'Birth Registration',
+  DEATH_CERT = 'Death Certification',
+}
+
 export type INavDropdownItem = {
   dropdownTitle: string;
   dropdownSlug: string;

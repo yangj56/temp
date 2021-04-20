@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Role } from 'contants';
+import { Eservice, Role } from 'contants';
 // eslint-disable-next-line import/no-cycle
 import { RootState } from 'store/store';
 
@@ -13,6 +13,7 @@ type RoleState = {
   publicKey: string;
   encryptedPrivateKey: string;
   appState: string[];
+  eservice: Eservice | null;
 };
 
 // Define the initial state using that type
@@ -24,6 +25,7 @@ const initialState: RoleState = {
   publicKey: '',
   encryptedPrivateKey: '',
   appState: [],
+  eservice: null,
 };
 
 export const userSlice = createSlice({
@@ -51,6 +53,9 @@ export const userSlice = createSlice({
     insertAppState: (state, action: PayloadAction<string>) => {
       state.appState.push(action.payload);
     },
+    setEservice: (state, action: PayloadAction<Eservice>) => {
+      state.eservice = action.payload;
+    },
   },
 });
 
@@ -62,6 +67,7 @@ export const {
   setPublicKey,
   setEncryptedPrivateKey,
   insertAppState,
+  setEservice,
 } = userSlice.actions;
 export const selectRole = (state: RootState) => state.user.role;
 export const selectUserID = (state: RootState) => state.user.userID;
@@ -69,5 +75,6 @@ export const selectSalt = (state: RootState) => state.user.salt;
 export const selectIV = (state: RootState) => state.user.iv;
 export const selectPublicKey = (state: RootState) => state.user.publicKey;
 export const selectAppState = (state: RootState) => state.user.appState;
+export const selectEservice = (state: RootState) => state.user.eservice;
 export const selectEncryptedPrivateKey = (state: RootState) =>
   state.user.encryptedPrivateKey;

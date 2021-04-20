@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Button } from 'react-bootstrap';
 
+import FileImage from 'assets/file-image.jpeg';
 import { Role } from '../../contants';
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
   onDownload: () => void;
   onShare: () => void;
   onImageClick?: () => void;
+  onGetSharees?: () => void;
   role: string;
 }
 
@@ -18,15 +20,14 @@ export const FileCard = ({
   onDownload,
   onShare,
   onImageClick,
+  onGetSharees,
   role,
 }: Props) => {
   return (
-    <Card style={{ width: '18rem', marginTop: 10, marginBottom: 10 }}>
+    <Card style={{ width: '25rem', marginTop: 10, marginBottom: 10 }}>
       <Card.Img
         variant="top"
-        src={
-          thumbnailPath || 'https://dummyimage.com/335x333/4ff978/c009e2.png'
-        }
+        src={FileImage}
         style={{ height: '15rem', cursor: 'pointer' }}
         onClick={onImageClick}
       />
@@ -37,9 +38,14 @@ export const FileCard = ({
             download
           </Button>
           {role === Role.AGENCY ? (
-            <Button variant="primary" onClick={onShare}>
-              share
-            </Button>
+            <>
+              <Button variant="primary" onClick={onShare}>
+                share
+              </Button>
+              <Button variant="primary" onClick={onGetSharees}>
+                view Sharee
+              </Button>
+            </>
           ) : null}
         </div>
       </Card.Body>
