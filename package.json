@@ -33,6 +33,7 @@
     "axios": "^0.21.1",
     "bootstrap": "^4.6.0",
     "lodash": "^4.17.21",
+    "pdfjs-dist": "^2.7.570",
     "react": "^17.0.1",
     "react-bootstrap": "^1.5.2",
     "react-content-loader": "^6.0.2",

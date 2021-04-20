@@ -12,6 +12,8 @@ import {
   getUserEncryptedPrivateKey,
   getUserPublicKeyAndFileDatakey,
   IFileResponse,
+  postShareFileToPublicUser,
+  uploadEncryptedFile,
   uploadToS3,
 } from 'features/poc/apis/poc';
 import AppStateList from 'features/poc/components/appstate-list';
@@ -30,17 +32,24 @@ import {
 import { useAppSelector } from 'hooks/useSlice';
 import { useEffect, useRef, useState } from 'react';
 import { Button, Card, Spinner } from 'react-bootstrap';
-import { useQuery } from 'react-query';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from 'store/store';
+import { useMutation, useQuery } from 'react-query';
+import {
+  arrayBufferToBase64,
+  base64StringToArrayBuffer,
+  generateIV,
+  generatePin,
+  generateSalt,
+} from 'util/helper';
+import {
+  decryptDataWithPasswordWithScrypt,
+  encryptDataWithPasswordWithScrypt,
+} from 'util/password-data-key';
 import {
   decryptWithCryptoKey,
   encryptWithCryptoKey,
   importPrivateKey,
   importPublicKey,
 } from 'util/asymmetric-key';
-import { base64StringToArrayBuffer, generateIV } from 'util/helper';
-import { decryptDataWithPasswordWithScrypt } from 'util/password-data-key';
 import {
   decryptWithSymmetricKey,
   encryptWithSymmetricKey,
@@ -49,13 +58,45 @@ import {
   importSymmtricKey,
 } from 'util/symmetric-key';
 
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from 'store/store';
+import { useCheckUserExists } from 'hooks/useCheckUserExists';
+import { InputModal } from 'components/input-modal';
+import { TextModal } from 'components/text-modal';
+import { FileCard } from '../components/file-card';
+
 export interface IFile {
   id: string;
   title: string;
   image: string;
 }
 
+export interface IFileShare {
+  userId: string;
+  fileId: string;
+}
+
+export interface IAdHocFileShare {
+  nric: string;
+  email: string;
+  mobile: string;
+}
+
 export default function Dashboard() {
+  const [fileShare, setFileShare] = useState<IFileShare>({
+    userId: '',
+    fileId: '',
+  });
+  const [adHocFileShare, setAdHocFileShare] = useState<IAdHocFileShare>({
+    nric: '',
+    email: '',
+    mobile: '',
+  });
+  const [showShareUserModal, setShowShareUserModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [userPassword, setUserPassword] = useState('');
+  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+
   const hiddenFileInputRef = useRef<HTMLInputElement | null>(null);
   const dispatch = useDispatch<AppDispatch>();
   const [loadingUpload, setLoadingUpload] = useState(false);
@@ -72,6 +113,26 @@ export default function Dashboard() {
     enabled: false,
   });
 
+  const {
+    isLoading: isCheckUserExistsLoading,
+    isError: isCheckUserExistsError,
+    refetch: checkUserExists,
+  } = useCheckUserExists(fileShare.userId);
+
+  const {
+    isLoading: isShareFileToPublicUserLoading,
+    isError: isShareFileToPublicUserError,
+    mutate: shareFileToPublicUser,
+    data: shareFileToPublicUserData,
+  } = useMutation(postShareFileToPublicUser, {
+    onSuccess: (result) => {
+      console.log('result', result);
+      setShowShareUserModal(false);
+      setShowEmailModal(true);
+      setIsGlobalLoading(false);
+    },
+  });
+
   const refetchUser = async () => {
     const searchParam = new URLSearchParams(window.location.search);
     const userId = searchParam.get('userid')!;
@@ -85,10 +146,128 @@ export default function Dashboard() {
     }
   };
 
+  const handleShareFileToUser = async (fileId: string, userId: string) => {
+    const password = window.prompt('Enter password'); // Get the agency's password
+    // Get the receiver's public key and file's data key with fileId, userId (agency) and receiver's userId
+    // userId and fileId to get encrypted data key of the file
+    const response = await getUserPublicKeyAndFileDatakey(
+      fileId,
+      userid,
+      userId
+    );
+
+    const saltUint = base64StringToArrayBuffer(salt) as Uint8Array;
+    const ivUint = base64StringToArrayBuffer(iv) as Uint8Array;
+
+    // Get the encrypted private key of the sharer (agency) and decrypt it with the agency's password with scrypt
+    const { encryptedPrivateKey } = await getUserEncryptedPrivateKey(userid!);
+    const plainPrivateKey = await decryptDataWithPasswordWithScrypt(
+      password!,
+      encryptedPrivateKey,
+      saltUint,
+      ivUint
+    );
+
+    // Import the decrypted private key into CryptoKey and decrypt the encrypted data key with it
+    const importedPrivateKey = await importPrivateKey(plainPrivateKey);
+    const dataKey = await decryptWithCryptoKey(
+      importedPrivateKey!,
+      response.encryptedDataKey
+    );
+
+    console.log('data key before encrypt', dataKey);
+
+    // Encrypt the data key with the receiver's public key to share
+    // const importedPublicKey = await importSymmtricKey(response.publicKey!);
+    const importedPublicKey = await importPublicKey(response.publicKey);
+    const receiverEncryptedDataKey = await encryptWithCryptoKey(
+      importedPublicKey!,
+      dataKey!
+    );
+
+    const res = await addEncryptedDataKey({
+      encryptedDataKey: receiverEncryptedDataKey!,
+      fileId,
+      userId,
+      iv: response.iv,
+    });
+
+    console.log('finished sharing');
+    console.log(res);
+  };
+
+  const handleShareFileToPublicUser = async () => {
+    const saltUint = base64StringToArrayBuffer(salt) as Uint8Array;
+    const ivUint = base64StringToArrayBuffer(iv) as Uint8Array;
+
+    // Get the encrypted private key of the sharer (agency) and decrypt it with the agency's password with scrypt
+    const { encryptedPrivateKey } = await getUserEncryptedPrivateKey(userid!);
+    const plainPrivateKey = await decryptDataWithPasswordWithScrypt(
+      userPassword,
+      encryptedPrivateKey,
+      saltUint,
+      ivUint
+    );
+
+    // Get the encrypted data key of the file
+    const response = await getUserPublicKeyAndFileDatakey(
+      fileShare.fileId,
+      userid
+    );
+
+    // Import the decrypted private key into CryptoKey and decrypt the encrypted data key with it
+    const importedPrivateKey = await importPrivateKey(plainPrivateKey);
+    const dataKey = await decryptWithCryptoKey(
+      importedPrivateKey!,
+      response.encryptedDataKey
+    );
+
+    // Generate PIN, salt and iv, generate password key from PIN and encrypt data key with the password key
+    const pin = generatePin(6);
+    const pinSalt = generateSalt();
+    const pinIv = generateIV();
+
+    const encryptedDataKey = await encryptDataWithPasswordWithScrypt(
+      pin,
+      dataKey,
+      pinSalt,
+      pinIv
+    );
+
+    // TODO: API to create transaction, encrypt data key, which returns url for accessing the file
+    shareFileToPublicUser({
+      userId: userid,
+      fileId: parseInt(fileShare.fileId, 10),
+      encryptedDataKey,
+      dataIv: response.iv,
+      salt: arrayBufferToBase64(pinSalt),
+      iv: arrayBufferToBase64(pinIv),
+      pin,
+    });
+  };
+
+  const handleCheckUserExists = async () => {
+    await checkUserExists().then((response) => {
+      if (response.data) {
+        const { userId, fileId } = fileShare;
+        handleShareFileToUser(fileId, userId);
+      } else {
+        console.log('no user found');
+        setShowShareUserModal(true);
+      }
+    });
+  };
+
   useEffect(() => {
     fetchAllFiles();
     refetchUser();
   }, []);
+
+  useEffect(() => {
+    if (fileShare.userId) {
+      handleCheckUserExists();
+    }
+  }, [fileShare]);
 
   if (isLoading) {
     return <LoadingSpinner loading />;
@@ -101,11 +280,13 @@ export default function Dashboard() {
     return true;
   };
 
-  const handleDownloadAction = async (fileID: string) => {
+  const handleDownloadAction = async (item: IFileResponse) => {
     if (!validateInput()) {
       window.alert(`Missing data`);
       return;
     }
+
+    const { id: fileID, name: filename, type: filetype } = item;
     console.log('Start download');
     const password = window.prompt('Enter your password');
 
@@ -163,73 +344,33 @@ export default function Dashboard() {
     );
 
     // 10. Convert the file string back to Blob
-    const dataFile = new File([decryptedFile!], 'lala.pdf', {
-      type: 'application/pdf',
+    const dataFile = new File([decryptedFile!], filename, {
+      type: filetype,
     });
 
     console.log('datafile', dataFile);
     const url = window.URL.createObjectURL(dataFile);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'loli.pdf');
+    link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
   };
 
-  const handleShareAction = async (fileID: string) => {
+  const handleShareAction = async (fileId: string) => {
     if (!validateInput()) {
       window.alert(`Missing data`);
       return;
     }
     console.log('Start sharing');
-    const receiverId = window.prompt('Enter the userid you want to share to'); // Get the id of user (citizen) to share the file with
-    const password = window.prompt('Enter password'); // Get the agency's password
-    // Get the receiver's public key and file's data key with fileId, userId (agency) and receiver's userId
-    // userId and fileId to get encrypted data key of the file
-    const response = await getUserPublicKeyAndFileDatakey(
-      fileID,
-      userid,
-      receiverId!
-    );
-
-    const saltUint = base64StringToArrayBuffer(salt) as Uint8Array;
-    const ivUint = base64StringToArrayBuffer(iv) as Uint8Array;
-
-    // Get the encrypted private key of the sharer (agency) and decrypt it with the agency's password with scrypt
-    const { encryptedPrivateKey } = await getUserEncryptedPrivateKey(userid!);
-    const plainPrivateKey = await decryptDataWithPasswordWithScrypt(
-      password!,
-      encryptedPrivateKey,
-      saltUint,
-      ivUint
-    );
-
-    // Import the decrypted private key into CryptoKey and decrypt the encrypted data key with it
-    const importedPrivateKey = await importPrivateKey(plainPrivateKey);
-    const dataKey = await decryptWithCryptoKey(
-      importedPrivateKey!,
-      response.encryptedDataKey
-    );
-
-    console.log('data key before encrypt', dataKey);
-
-    // Encrypt the data key with the receiver's public key to share
-    // const importedPublicKey = await importSymmtricKey(response.publicKey!);
-    const importedPublicKey = await importPublicKey(response.publicKey);
-    const receiverEncryptedDataKey = await encryptWithCryptoKey(
-      importedPublicKey!,
-      dataKey!
-    );
-
-    const res = await addEncryptedDataKey({
-      encryptedDataKey: receiverEncryptedDataKey!,
-      fileId: fileID,
-      userId: receiverId!,
-      iv: response.iv,
-    });
-
-    console.log('finished sharing');
-    console.log(res);
+    const userId = window.prompt('Enter the userid you want to share to'); // Get the id of user (citizen) to share the file with
+    if (typeof userId === 'string') {
+      if (userId.length > 0) {
+        setFileShare({ userId, fileId });
+      } else {
+        window.alert('User id cannot be empty!');
+      }
+    }
   };
 
   const handleUploadAction = () => {
@@ -250,7 +391,7 @@ export default function Dashboard() {
 
     const dataIv = generateIV(); // Generate IV
     const dataKey = (await generateSymKeyPair())!; // Generate data key (symmetric key)
-    const dataInBuffer = await file.arrayBuffer(); // Convert the entire file where contents are interpreted as UTF-8 text
+    const dataInBuffer = await file.arrayBuffer(); // Convert the entire file into array buffer
     // Encrypt the file with data key and iv
     const encryptedData = (await encryptWithSymmetricKey(
       dataKey,
@@ -269,21 +410,22 @@ export default function Dashboard() {
     console.log('userPublicKeyString', publicKey);
     console.log('data key before encrypt', exportedDataKey);
 
-    // Convert the encrypted file (text) back to Blob
+    // Convert the encrypted file back to Blob
     const encryptedDataBuffer = base64StringToArrayBuffer(encryptedData!);
     const encryptedDataBlob = new Blob([new Uint8Array(encryptedDataBuffer)]);
     const encryptedFile = new File([encryptedDataBlob], name, { type });
 
-    // const formData = new FormData();
-    // formData.append('file', new File([encryptedDataBlob], name, { type }));
-    // formData.append('userId', userid);
-    // formData.append('encryptedDataKey', encryptedDataKey);
-    // formData.append('iv', arrayBufferToBase64(dataIv));
-    // const uploadResult = await uploadEncryptedFile(formData);
-    // if (uploadResult) {
-    //   fetchAllFiles();
-    // }
-    uploadToS3(encryptedFile);
+    const formData = new FormData();
+    formData.append('file', encryptedFile);
+    formData.append('userId', userid);
+    formData.append('encryptedDataKey', encryptedDataKey);
+    formData.append('iv', arrayBufferToBase64(dataIv));
+    const uploadResult = await uploadEncryptedFile(formData);
+    if (uploadResult) {
+      fetchAllFiles();
+    }
+
+    // uploadToS3(encryptedFile);
     setLoadingUpload(false);
   };
 
@@ -297,38 +439,14 @@ export default function Dashboard() {
 
   const fileComponents = data
     ? data.map((item, index) => (
-        <Card
-          style={{ width: '18rem', marginTop: 10, marginBottom: 10 }}
+        <FileCard
+          name={item.name}
+          thumbnailPath={item.thumbnailPath}
+          onDownload={() => handleDownloadAction(item)}
+          onShare={() => handleShareAction(item.id)}
+          role={role}
           key={`dashboard-card-${index}`}
-        >
-          <Card.Img
-            variant="top"
-            src={
-              item.thumbnailPath ||
-              'https://dummyimage.com/335x333/4ff978/c009e2.png'
-            }
-            style={{ height: '15rem' }}
-          />
-          <Card.Body>
-            <Card.Text>{item.name}</Card.Text>
-            <div className="flex flex-row justify-between">
-              <Button
-                variant="primary"
-                onClick={() => handleDownloadAction(item.id)}
-              >
-                download
-              </Button>
-              {role === Role.AGENCY ? (
-                <Button
-                  variant="primary"
-                  onClick={() => handleShareAction(item.id)}
-                >
-                  share
-                </Button>
-              ) : null}
-            </div>
-          </Card.Body>
-        </Card>
+        />
       ))
     : null;
 
@@ -362,10 +480,43 @@ export default function Dashboard() {
           />
         </div>
       ) : null}
-      <div className="flex flex-row flex-wrap justify-between px-4 py-2">
-        {fileComponents}
-      </div>
+      <div className="grid grid-cols-3 gap-4">{fileComponents}</div>
       <AppStateList />
+      {showShareUserModal && (
+        <InputModal
+          show={showShareUserModal}
+          title="User is not onboard, please provide information for ad hoc sharing."
+          onClose={() => setShowShareUserModal(false)}
+          onEnter={() => {
+            setIsGlobalLoading(true);
+            handleShareFileToPublicUser();
+          }}
+          onNricChange={(e) =>
+            setAdHocFileShare({ ...adHocFileShare, nric: e.target.value })
+          }
+          onEmailChange={(e) =>
+            setAdHocFileShare({ ...adHocFileShare, email: e.target.value })
+          }
+          onMobileChange={(e) =>
+            setAdHocFileShare({ ...adHocFileShare, mobile: e.target.value })
+          }
+          onPasswordChange={(e) => setUserPassword(e.target.value)}
+        />
+      )}
+      {shareFileToPublicUserData && (
+        <TextModal
+          show={showEmailModal}
+          title="File Retrieval"
+          onClose={() => setShowEmailModal(false)}
+        >
+          <p>
+            Please{' '}
+            <a href={shareFileToPublicUserData.fileShareLoginURL}>click here</a>{' '}
+            to view your shared file. PIN: {shareFileToPublicUserData.pin}
+          </p>
+        </TextModal>
+      )}
+      {isGlobalLoading && <LoadingSpinner loading />}
     </Secondary>
   );
 }

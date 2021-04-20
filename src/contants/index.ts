@@ -10,6 +10,8 @@ export enum WebPage {
   DASHBOARD = '/dashboard',
   FILEURL = '/file-url',
   ESERVICES = '/eservice',
+  FILE_SHARE = '/file-share',
+  LOGIN_FILE_SHARE = '/file-share-login',
 }
 
 export type INavDropdownItem = {

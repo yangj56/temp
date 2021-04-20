@@ -9,6 +9,8 @@ import { Home } from './pages/home';
 import { Spikes } from './pages/spikes';
 import { FileURL } from './pages/file-url';
 import { EService } from './pages/eservice';
+import { LoginFileShare } from './pages/login-file-share';
+import { FileShare } from './pages/file-share';
 
 export function Router(): JSX.Element {
   return (
@@ -40,6 +42,12 @@ export function Router(): JSX.Element {
         </Route>
         <Route path={WebPage.ESERVICES} exact>
           <EService />
+        </Route>
+        <Route path={WebPage.LOGIN_FILE_SHARE} exact>
+          <LoginFileShare />
+        </Route>
+        <Route path={WebPage.FILE_SHARE} exact>
+          <FileShare />
         </Route>
       </Switch>
     </BrowserRouter>

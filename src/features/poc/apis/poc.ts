@@ -74,6 +74,7 @@ export interface IFileResponse {
   updatedAt: string;
   id: string;
   name: string;
+  type: string;
   thumbnailPath: string;
 }
 
@@ -128,11 +129,11 @@ interface IUserPublicKeyAndFileDatakeyResponse {
   publicKey: string;
   iv: string;
 }
-// API-6
+// API-6 (is recevierId is not given, return only the encrypted data key of the file)
 export const getUserPublicKeyAndFileDatakey = async (
   fileId: string,
   userId: string,
-  receiverId: string
+  receiverId = ''
 ): Promise<IUserPublicKeyAndFileDatakeyResponse> => {
   return apiServerCLient
     .get(
@@ -189,6 +190,66 @@ export const getFileUploadPresignedUrl = async (
     });
 };
 
+interface IShareFileToPublicUserInput {
+  userId: string;
+  fileId: number;
+  encryptedDataKey: string;
+  dataIv: string;
+  salt: string;
+  iv: string;
+  pin: string;
+}
+
+interface IShareFileToPublicUserResponse {
+  id: string;
+  salt: string;
+  iv: string;
+  fileShareLoginURL: string;
+  pin: string;
+  user: { id: string };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const postShareFileToPublicUser = async (
+  input: IShareFileToPublicUserInput
+): Promise<IShareFileToPublicUserResponse | null> => {
+  return apiServerCLient
+    .post('/user/share-file-public', input)
+    .then((response) => response.data.data);
+};
+
+interface ITransactionResponse {
+  id: string;
+  salt: string;
+  iv: string;
+  transactionFiles: ITransactionFile[];
+}
+
+export interface ITransactionFile {
+  id: string;
+  tempDataKey: string;
+  tempDataIv: string;
+  file: IFile;
+}
+
+export interface IFile {
+  id: string;
+  name: string;
+  type: string;
+  path: string;
+  awsKey: string;
+  thumbnailPath: string;
+}
+
+export const getTransaction = async (
+  transactionId: string
+): Promise<ITransactionResponse | null> => {
+  return apiServerCLient
+    .get(`/transaction/${transactionId}`)
+    .then((response) => response.data.data);
+};
+
 export const uploadToS3 = async (file: File) => {
   const { name, type } = file;
   const presignedUploadUrl = await getFileUploadPresignedUrl(name);
@@ -200,7 +261,7 @@ export const uploadToS3 = async (file: File) => {
 
   // Upload the image to our pre-signed URL.
   return axios
-    .post(presignedUploadUrl, file, {
+    .put(presignedUploadUrl, file, {
       headers: {
         'content-type': type,
       },
