@@ -24,13 +24,29 @@ export const FileCard = ({
   role,
 }: Props) => {
   return (
-    <Card style={{ width: '25rem', marginTop: 10, marginBottom: 10 }}>
-      <Card.Img
-        variant="top"
-        src={FileImage}
-        style={{ height: '15rem', cursor: 'pointer' }}
-        onClick={onImageClick}
-      />
+    <Card
+      style={{
+        width: '20rem',
+        marginTop: 10,
+        marginBottom: 10,
+        borderRadius: '10px',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '10px',
+        }}
+      >
+        <Card.Img
+          variant="top"
+          src={FileImage}
+          style={{ height: '12rem', width: '15rem', cursor: 'pointer' }}
+          onClick={onImageClick}
+        />
+      </div>
       <Card.Body>
         <Card.Text>Name: {name}</Card.Text>
         <div className="flex flex-row justify-between">

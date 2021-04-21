@@ -60,7 +60,7 @@ export const InputModal = ({
             id="password"
             aria-describedby="basic-password"
             onChange={onPasswordChange}
-            placeholder="Password"
+            placeholder="Agency Password"
             type="text"
           />
         </InputGroup>

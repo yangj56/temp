@@ -22,6 +22,7 @@ export const FileShare = () => {
   const [pinSalt, setPinSalt] = useState<Uint8Array>();
   const [pinIv, setPinIv] = useState<Uint8Array>();
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [pdf, setPdf] = useState<File | null>(null);
 
   const { search } = window.location;
@@ -57,6 +58,8 @@ export const FileShare = () => {
       const password = window.prompt('Enter your PIN');
       if (typeof password === 'object') return;
 
+      setLoading(true);
+
       let dataKeyString: string = '';
       try {
         // Enter PIN to generate password key with scrypt and decrypt the encrypted data key key with password key
@@ -67,8 +70,8 @@ export const FileShare = () => {
           pinIv!
         );
       } catch (err) {
-        console.log('err in file-share', err.message);
-        setError(err);
+        setLoading(false);
+        setError('Please provide a valid PIN.');
         return;
       }
 
@@ -95,6 +98,7 @@ export const FileShare = () => {
       });
 
       // setPdf(dataFile);
+      setLoading(false);
 
       console.log('datafile', dataFile);
       const url = window.URL.createObjectURL(dataFile);
@@ -125,10 +129,10 @@ export const FileShare = () => {
           );
         })}
       {isError && <div>Error getting transaction</div>}
-      {isLoading && <LoadingSpinner loading />}
+      {(isLoading || loading) && <LoadingSpinner loading />}
       {error && (
         <TextModal show title="File Download" onClose={() => setError('')}>
-          <p>Please provide a valid PIN.</p>
+          <p>{error}</p>
         </TextModal>
       )}
       <Footer />

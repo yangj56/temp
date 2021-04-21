@@ -7,6 +7,7 @@ import { QueryKey, Role } from 'contants';
 import {
   addEncryptedDataKey,
   getAllFiles,
+  getAllFilesByUserEservice,
   getEncryptedDataKey,
   getEncryptedFile,
   getSharees,
@@ -99,22 +100,26 @@ export default function Dashboard() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [userPassword, setUserPassword] = useState('');
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
-  const [shareesArr, setShareesArr] = useState<any[]>([
-    {
-      shareUserId: 'test',
-      shareFileId: '123',
-      shareFileName: 'est',
-    },
-    {
-      shareUserId: 'test',
-      shareFileId: '123',
-      shareFileName: 'est',
-    },
-  ]);
+  // const [shareesArr, setShareesArr] = useState<any[]>([
+  //   {
+  //     shareUserId: 'test',
+  //     shareFileId: '123',
+  //     shareFileName: 'est',
+  //   },
+  //   {
+  //     shareUserId: 'test',
+  //     shareFileId: '123',
+  //     shareFileName: 'est',
+  //   },
+  // ]);
+
+  const [shareesArr, setShareesArr] = useState<any[]>([]);
 
   const hiddenFileInputRef = useRef<HTMLInputElement | null>(null);
   const dispatch = useDispatch<AppDispatch>();
   const [loadingUpload, setLoadingUpload] = useState(false);
+  const [loadingShare, setLoadingShare] = useState(false);
+  const [error, setError] = useState('');
 
   const role = useAppSelector(selectRole) as Role;
   const userid = useAppSelector(selectUserID);
@@ -123,11 +128,21 @@ export default function Dashboard() {
   const publicKey = useAppSelector(selectPublicKey);
   const eservice = useAppSelector(selectEservice);
 
+  // const { isLoading, isError, data, refetch: fetchAllFiles } = useQuery<
+  //   IFileResponse[]
+  // >(QueryKey.ALL_FILE, () => getAllFiles(), {
+  //   enabled: false,
+  // });
+
   const { isLoading, isError, data, refetch: fetchAllFiles } = useQuery<
     IFileResponse[]
-  >(QueryKey.ALL_FILE, () => getAllFiles(), {
-    enabled: false,
-  });
+  >(
+    [QueryKey.ALL_FILE, userid, eservice],
+    () => getAllFilesByUserEservice(userid, eservice!),
+    {
+      enabled: false,
+    }
+  );
 
   const {
     isLoading: isCheckUserExistsLoading,
@@ -163,25 +178,38 @@ export default function Dashboard() {
   };
 
   const handleShareFileToUser = async (fileId: string, userId: string) => {
-    const password = window.prompt('Enter password'); // Get the agency's password
+    const password = window.prompt("Enter agency's password"); // Get the agency's password
+    if (typeof password === 'object') return;
+
+    setLoadingShare(true);
+
+    const saltUint = base64StringToArrayBuffer(salt) as Uint8Array;
+    const ivUint = base64StringToArrayBuffer(iv) as Uint8Array;
+    // Get the encrypted private key of the sharer (agency) and decrypt it with the agency's password with scrypt
+    const { encryptedPrivateKey } = await getUserEncryptedPrivateKey(userid!);
+
+    let plainPrivateKey: string = '';
+    try {
+      plainPrivateKey = await decryptDataWithPasswordWithScrypt(
+        password!,
+        encryptedPrivateKey,
+        saltUint,
+        ivUint
+      );
+    } catch (err) {
+      setLoadingShare(false);
+      setError(
+        'Failed to share file. Make sure you entered the correct password.'
+      );
+      return;
+    }
+
     // Get the receiver's public key and file's data key with fileId, userId (agency) and receiver's userId
     // userId and fileId to get encrypted data key of the file
     const response = await getUserPublicKeyAndFileDatakey(
       fileId,
       userid,
       userId
-    );
-
-    const saltUint = base64StringToArrayBuffer(salt) as Uint8Array;
-    const ivUint = base64StringToArrayBuffer(iv) as Uint8Array;
-
-    // Get the encrypted private key of the sharer (agency) and decrypt it with the agency's password with scrypt
-    const { encryptedPrivateKey } = await getUserEncryptedPrivateKey(userid!);
-    const plainPrivateKey = await decryptDataWithPasswordWithScrypt(
-      password!,
-      encryptedPrivateKey,
-      saltUint,
-      ivUint
     );
 
     // Import the decrypted private key into CryptoKey and decrypt the encrypted data key with it
@@ -208,6 +236,7 @@ export default function Dashboard() {
       iv: response.iv,
     });
 
+    setLoadingShare(false);
     console.log('finished sharing');
     console.log(res);
   };
@@ -275,9 +304,10 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchAllFiles();
+    if (userid) fetchAllFiles();
     refetchUser();
-  }, []);
+    // console.log('eservice', eservice);
+  }, [userid]);
 
   useEffect(() => {
     if (fileShare.userId) {
@@ -306,21 +336,36 @@ export default function Dashboard() {
     console.log('Start download');
     const password = window.prompt('Enter your password');
 
+    if (typeof password === 'object') return;
+
+    setLoadingShare(true);
+
     // 1. Get user's encrypted private key
     const { encryptedPrivateKey } = await getUserEncryptedPrivateKey(userid!);
-    console.log('encryptedPrivateKey');
-    console.log(encryptedPrivateKey);
+    // console.log('encryptedPrivateKey');
+    // console.log(encryptedPrivateKey);
+
+    let privateKeyString: string = '';
 
     // 2. Enter password to generate password key with scrypt and decrypt the private key with password key
     console.log({ encryptedPrivateKey, salt, iv });
     const saltUint = base64StringToArrayBuffer(salt) as Uint8Array;
     const ivUint = base64StringToArrayBuffer(iv) as Uint8Array;
-    const privateKeyString = await decryptDataWithPasswordWithScrypt(
-      password!,
-      encryptedPrivateKey,
-      saltUint,
-      ivUint
-    );
+
+    try {
+      privateKeyString = await decryptDataWithPasswordWithScrypt(
+        password!,
+        encryptedPrivateKey,
+        saltUint,
+        ivUint
+      );
+    } catch (err) {
+      setLoadingShare(false);
+      setError(
+        'Failed to download file. Make sure you entered the correct password.'
+      );
+      return;
+    }
 
     // 3. Import the base64 private key into a CryptoKey
     const importedPrivateKey = await importPrivateKey(privateKeyString);
@@ -363,6 +408,8 @@ export default function Dashboard() {
     const dataFile = new File([decryptedFile!], filename, {
       type: filetype,
     });
+
+    setLoadingShare(false);
 
     console.log('datafile', dataFile);
     const url = window.URL.createObjectURL(dataFile);
@@ -434,6 +481,7 @@ export default function Dashboard() {
     const formData = new FormData();
     formData.append('file', encryptedFile);
     formData.append('userId', userid);
+    formData.append('eservice', eservice!);
     formData.append('encryptedDataKey', encryptedDataKey);
     formData.append('iv', arrayBufferToBase64(dataIv));
     const uploadResult = await uploadEncryptedFile(formData);
@@ -453,8 +501,8 @@ export default function Dashboard() {
     e.target.value = '';
   };
 
-  const handleGetSharees = async () => {
-    const sharees = await getSharees(userid);
+  const handleGetSharees = async (userId: string, fileId: string) => {
+    const sharees = await getSharees(userId, fileId);
     setShareesArr(sharees);
   };
 
@@ -471,19 +519,13 @@ export default function Dashboard() {
           onShare={() => handleShareAction(item.id)}
           role={role}
           key={`dashboard-card-${index}`}
-          onGetSharees={() => handleGetSharees()}
+          onGetSharees={() => handleGetSharees(userid, item.id)}
         />
       ))
     : null;
 
   return (
     <Secondary>
-      {loadingUpload && (
-        <div className="flex flex-row items-center mt-2 p-2">
-          <h3 className="mx-2">Uploading</h3>
-          <Spinner animation="border" />
-        </div>
-      )}
       {isError && <div>isError</div>}
       {role === Role.AGENCY ? (
         <div className="ml-4 mt-2">
@@ -542,26 +584,44 @@ export default function Dashboard() {
           </p>
         </TextModal>
       )}
+      {error && (
+        <TextModal show title="Error" onClose={() => setError('')}>
+          <p>{error}</p>
+        </TextModal>
+      )}
       {shareesArr.length > 0 && (
         <TextModal
           show={shareesArr.length > 0}
           title="Show Sharees"
           onClose={() => setShareesArr([])}
         >
-          {shareesArr.map(({ shareUserId, shareFileId, shareFileName }) => (
-            <div className="flex mb-5">
-              <p className="mr-5">{shareFileName}</p>
-              <Button
-                variant="primary"
-                onClick={() => handleRevoke(shareUserId, shareFileId)}
+          {shareesArr.map(
+            (
+              { id: shareUserId, fileId: shareFileId, fileName: shareFileName },
+              index
+            ) => (
+              <div
+                className="flex items-center justify-between mb-5"
+                key={`sharee-${index}`}
               >
-                Revoke Access
-              </Button>
-            </div>
-          ))}
+                <p className="mr-5">{`${shareUserId} - ${shareFileName}`}</p>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    handleRevoke(shareUserId, shareFileId);
+                    setShareesArr([]);
+                  }}
+                >
+                  Revoke Access
+                </Button>
+              </div>
+            )
+          )}
         </TextModal>
       )}
-      {isGlobalLoading && <LoadingSpinner loading />}
+      {(isGlobalLoading || loadingUpload || loadingShare) && (
+        <LoadingSpinner loading />
+      )}
     </Secondary>
   );
 }

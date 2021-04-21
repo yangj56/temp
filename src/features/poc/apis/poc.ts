@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { apiServerCLient } from 'config/api-client';
+import { Eservice } from 'contants';
 import { String } from 'lodash';
 
 export interface ILoginInput {
@@ -282,14 +283,23 @@ export const uploadToS3 = async (file: File) => {
   // console.log('res', response);
 };
 
-export const getSharees = async (userid) => {
+export const getSharees = async (userid: string, fileid: string) => {
   return apiServerCLient
-    .get(`/user/${userid}`)
+    .get(`/user/all-shared?userId=${userid}&fileId=${fileid}`)
     .then((response) => response.data.data);
 };
 
-export const revokeSharee = async (userid, fileid) => {
+export const revokeSharee = async (userid: string, fileid: string) => {
   return apiServerCLient
-    .post(`/user?userid=${userid}&&fileid=${fileid}`)
+    .delete(`/key?userId=${userid}&&fileId=${fileid}`)
+    .then((response) => response.data.data);
+};
+
+export const getAllFilesByUserEservice = (
+  userid: string,
+  eservice: Eservice
+) => {
+  return apiServerCLient
+    .get(`/file/all-belong?userId=${userid}&eservice=${eservice}`)
     .then((response) => response.data.data);
 };
