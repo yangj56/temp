@@ -3,7 +3,7 @@
 /* eslint-disable no-alert */
 import { Secondary } from 'common/layout/secondary';
 import { LoadingSpinner } from 'components/modal/loading';
-import { QueryKey, Role } from 'contants';
+import { AppState, QueryKey, Role } from 'contants';
 import {
   addEncryptedDataKey,
   getAllFiles,
@@ -21,6 +21,7 @@ import {
 } from 'features/poc/apis/poc';
 import AppStateList from 'features/poc/components/appstate-list';
 import {
+  insertAppState,
   selectEservice,
   selectIV,
   selectPublicKey,
@@ -106,6 +107,7 @@ export default function Dashboard() {
   const [userPassword, setUserPassword] = useState('');
   const [inputModalPassword, setInputModalPassword] = useState('');
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+  const [encryptedPrivateKey, setEncryptedPrivateKey] = useState('');
   const [globalModalMsg, setGlobalModalMsg] = useState<IGlobalModalMsg | null>(
     null
   );
@@ -136,6 +138,10 @@ export default function Dashboard() {
   const salt = useAppSelector(selectSalt);
   const publicKey = useAppSelector(selectPublicKey);
   const eservice = useAppSelector(selectEservice);
+
+  const dispatchAppState = (appState: string) => {
+    dispatch(insertAppState(appState));
+  };
 
   // const { isLoading, isError, data, refetch: fetchAllFiles } = useQuery<
   //   IFileResponse[]
@@ -177,12 +183,14 @@ export default function Dashboard() {
     const searchParam = new URLSearchParams(window.location.search);
     const userId = searchParam.get('userid')!;
     const user = await getUserEncryptedPrivateKey(userId);
+    dispatchAppState(AppState.RETRIEVE_USER_DATA);
     if (user) {
       dispatch(setSalt(user.salt));
       dispatch(setIV(user.iv));
       dispatch(setUserID(user.id));
       dispatch(setPublicKey(user.publicKey));
       dispatch(setRole(user.role));
+      setEncryptedPrivateKey(user.encryptedPrivateKey);
     }
   };
 
@@ -200,7 +208,7 @@ export default function Dashboard() {
     const saltUint = base64StringToArrayBuffer(salt) as Uint8Array;
     const ivUint = base64StringToArrayBuffer(iv) as Uint8Array;
     // Get the encrypted private key of the sharer (agency) and decrypt it with the agency's password with scrypt
-    const { encryptedPrivateKey } = await getUserEncryptedPrivateKey(userid!);
+    // const { encryptedPrivateKey } = await getUserEncryptedPrivateKey(userid!);
 
     let plainPrivateKey: string = '';
     try {
@@ -210,6 +218,7 @@ export default function Dashboard() {
         saltUint,
         ivUint
       );
+      dispatchAppState(AppState.DECRYPT_PRIVATE_KEY_PASSWORD);
     } catch (err) {
       setLoadingShare(false);
       setError(
@@ -228,6 +237,8 @@ export default function Dashboard() {
       userId
     );
 
+    dispatchAppState(AppState.RETRIEVE_SHAREE_PUBLIC_KEY);
+    dispatchAppState(AppState.RETRIEVE_ENCRYPTED_DATA_KEY);
     // Import the decrypted private key into CryptoKey and decrypt the encrypted data key with it
     const importedPrivateKey = await importPrivateKey(plainPrivateKey);
     const dataKey = await decryptWithCryptoKey(
@@ -235,6 +246,7 @@ export default function Dashboard() {
       response.encryptedDataKey
     );
 
+    dispatchAppState(AppState.DECRYPT_DATA_KEY);
     console.log('data key before encrypt', dataKey);
 
     // Encrypt the data key with the receiver's public key to share
@@ -245,6 +257,7 @@ export default function Dashboard() {
       dataKey!
     );
 
+    dispatchAppState(AppState.ENCRYPT_DATA_KEY_WITH_USER_PUB_KEY);
     const res = await addEncryptedDataKey({
       encryptedDataKey: receiverEncryptedDataKey!,
       fileId,
@@ -252,6 +265,7 @@ export default function Dashboard() {
       iv: response.iv,
     });
 
+    dispatchAppState(AppState.UPLOADING_ENCRYPTED_DATA_KEY);
     setLoadingShare(false);
     console.log('finished sharing');
     console.log(res);
@@ -265,7 +279,7 @@ export default function Dashboard() {
     const ivUint = base64StringToArrayBuffer(iv) as Uint8Array;
 
     // Get the encrypted private key of the sharer (agency) and decrypt it with the agency's password with scrypt
-    const { encryptedPrivateKey } = await getUserEncryptedPrivateKey(userid!);
+    // const { encryptedPrivateKey } = await getUserEncryptedPrivateKey(userid!);
 
     let plainPrivateKey: string = '';
     try {
@@ -275,6 +289,7 @@ export default function Dashboard() {
         saltUint,
         ivUint
       );
+      dispatchAppState(AppState.DECRYPT_PRIVATE_KEY_PASSWORD);
     } catch (err) {
       setIsGlobalLoading(false);
       setError(
@@ -291,13 +306,14 @@ export default function Dashboard() {
       userid
     );
 
+    dispatchAppState(AppState.RETRIEVE_ENCRYPTED_DATA_KEY);
     // Import the decrypted private key into CryptoKey and decrypt the encrypted data key with it
     const importedPrivateKey = await importPrivateKey(plainPrivateKey);
     const dataKey = await decryptWithCryptoKey(
       importedPrivateKey!,
       response.encryptedDataKey
     );
-
+    dispatchAppState(AppState.DECRYPT_DATA_KEY);
     // Generate PIN, salt and iv, generate password key from PIN and encrypt data key with the password key
     const pin = generatePin(6);
     const pinSalt = generateSalt();
@@ -309,7 +325,8 @@ export default function Dashboard() {
       pinSalt,
       pinIv
     );
-
+    dispatchAppState(AppState.ENCRYPT_DATA_KEY_WITH_PIN);
+    dispatchAppState(AppState.UPLOADING_ENCRYPTED_DATA_KEY);
     // TODO: API to create transaction, encrypt data key, which returns url for accessing the file
     shareFileToPublicUser({
       userId: userid,
@@ -326,8 +343,10 @@ export default function Dashboard() {
     await checkUserExists().then((response) => {
       if (response.data) {
         const { userId, fileId } = fileShare;
+        dispatchAppState(AppState.ACTION_SHARE_ONBOARDED_USER);
         handleShareFileToUser(fileId, userId);
       } else {
+        dispatchAppState(AppState.ACTION_SHARE_NON_ONBOARDED_USER);
         console.log('no user found');
         setShowShareUserModal(true);
       }
@@ -335,7 +354,11 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (userid) fetchAllFiles();
+    if (userid) {
+      fetchAllFiles();
+      dispatchAppState(AppState.ACTION_RETRIEVAL_FILE);
+      dispatchAppState(AppState.RETRIEVE_ALL_FILE);
+    }
     refetchUser();
   }, [userid]);
 
@@ -357,6 +380,7 @@ export default function Dashboard() {
   };
 
   const handleDownloadAction = async (item: IFileResponse) => {
+    dispatchAppState(AppState.ACTION_DOWNLOAD);
     if (!validateInput()) {
       window.alert(`Missing data`);
       return;
@@ -376,7 +400,8 @@ export default function Dashboard() {
     setLoadingShare(true);
 
     // 1. Get user's encrypted private key
-    const { encryptedPrivateKey } = await getUserEncryptedPrivateKey(userid!);
+    // const { encryptedPrivateKey } = await getUserEncryptedPrivateKey(userid!);
+
     // console.log('encryptedPrivateKey');
     // console.log(encryptedPrivateKey);
 
@@ -394,6 +419,7 @@ export default function Dashboard() {
         saltUint,
         ivUint
       );
+      dispatchAppState(AppState.DECRYPT_PRIVATE_KEY_PASSWORD);
     } catch (err) {
       setLoadingShare(false);
       setError(
@@ -409,11 +435,12 @@ export default function Dashboard() {
 
     // 4. Get encrypted file
     const responseData = await getEncryptedFile(fileID);
-
+    dispatchAppState(AppState.RETRIEVE_ENCRYPTED_FILE);
     // 5. Get encrypted data key and iv with userId and fileId
     const { key: encryptedDataKey, iv: fileIV } = (
       await getEncryptedDataKey(fileID, userid)
     )[0];
+    dispatchAppState(AppState.RETRIEVE_ENCRYPTED_DATA_KEY);
     const fileIvVal = base64StringToArrayBuffer(fileIV) as Uint8Array;
 
     // 6. Decrypt the encrypted data key with the imported private key
@@ -422,6 +449,7 @@ export default function Dashboard() {
       encryptedDataKey
     );
 
+    dispatchAppState(AppState.DECRYPT_DATA_KEY);
     console.log('importedPrivateKey', importedPrivateKey!);
     console.log('encryptedDataKey', encryptedDataKey);
 
@@ -441,6 +469,8 @@ export default function Dashboard() {
       fileIvVal
     );
 
+    dispatchAppState(AppState.DECRYPT_FILE_WITH_DATA_KEY);
+
     // 10. Convert the file string back to Blob
     const dataFile = new File([decryptedFile!], filename, {
       type: filetype,
@@ -454,10 +484,12 @@ export default function Dashboard() {
     link.href = url;
     link.setAttribute('download', filename);
     document.body.appendChild(link);
+    dispatchAppState(AppState.PREPARE_FILE_FOR_DOWNLOAD);
     link.click();
   };
 
   const handleShareAction = async (fileId: string) => {
+    dispatchAppState(AppState.ACTION_SHARE_FILE);
     if (!validateInput()) {
       window.alert(`Missing data`);
       return;
@@ -474,6 +506,7 @@ export default function Dashboard() {
   };
 
   const handleUploadAction = () => {
+    dispatchAppState(AppState.ACTION_UPLOAD);
     if (!validateInput()) {
       window.alert(`Missing data`);
       return;
@@ -491,6 +524,7 @@ export default function Dashboard() {
 
     const dataIv = generateIV(); // Generate IV
     const dataKey = (await generateSymKeyPair())!; // Generate data key (symmetric key)
+    dispatchAppState(AppState.GENERATE_DATA_KEY);
     const dataInBuffer = await file.arrayBuffer(); // Convert the entire file into array buffer
     // Encrypt the file with data key and iv
     const encryptedData = (await encryptWithSymmetricKey(
@@ -498,6 +532,7 @@ export default function Dashboard() {
       dataInBuffer,
       dataIv
     ))!;
+    dispatchAppState(AppState.ENCRYPT_FILE_WITH_DATA_KEY);
     console.log('old dataInText', dataInBuffer);
 
     const importedPublicKey = (await importPublicKey(publicKey))!; // Import the public key into CryptoKey
@@ -507,6 +542,7 @@ export default function Dashboard() {
       importedPublicKey,
       exportedDataKey
     )) as string;
+    dispatchAppState(AppState.ENCRYPT_DATA_KEY_AGENCY_PUB_KEY);
     console.log('userPublicKeyString', publicKey);
     console.log('data key before encrypt', exportedDataKey);
 
@@ -522,6 +558,8 @@ export default function Dashboard() {
     formData.append('encryptedDataKey', encryptedDataKey);
     formData.append('iv', arrayBufferToBase64(dataIv));
     const uploadResult = await uploadEncryptedFile(formData);
+    dispatchAppState(AppState.UPLOADING_ENCRYPTED_FILE);
+    dispatchAppState(AppState.UPLOADING_ENCRYPTED_DATA_KEY);
     if (uploadResult) {
       fetchAllFiles();
     }

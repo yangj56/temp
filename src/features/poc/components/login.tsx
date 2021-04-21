@@ -144,12 +144,12 @@ export function Login({ role, title, placeholder }: Props) {
   };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    dispatchAppState(AppState.ACTION_LOGIN);
     e.preventDefault();
     if (!validateInput()) {
       window.alert('Missing data');
       return;
     }
-
     await checkUserExist().then((response) => {
       if (response.data) {
         if (response.data.role !== role) {
@@ -183,7 +183,6 @@ export function Login({ role, title, placeholder }: Props) {
       const asymmetricKeyPEM = await exportAsymmetricKeyToPEM(
         asymmetricKeyPair!
       );
-      dispatchAppState(asymmetricKeyPEM.privateKey);
       dispatchAppState(AppState.ENCRYPT_PRIVATE_KEY_WITH_PASSWORD);
       const encryptedPrivateKey = await encryptDataWithPasswordWithScrypt(
         password,
@@ -191,14 +190,12 @@ export function Login({ role, title, placeholder }: Props) {
         newSalt!,
         newIV!
       );
-      dispatchAppState(encryptedPrivateKey);
       setPublicKeyVal(asymmetricKeyPEM.publicKey);
       setEncryptedPrivateKeyVal(encryptedPrivateKey);
       setGoNext(true);
     } catch (err) {
       setShowLoadingModal(false);
       console.log('Error while generating keys');
-      dispatchAppState(`Error while generating keys ${err.message}`);
     }
   };
 
