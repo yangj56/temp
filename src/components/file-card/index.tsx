@@ -43,7 +43,11 @@ export const FileCard = ({
         <Card.Img
           variant="top"
           src={FileImage}
-          style={{ height: '12rem', width: '15rem', cursor: 'pointer' }}
+          style={{
+            height: '12rem',
+            width: '15rem',
+            cursor: 'pointer',
+          }}
           onClick={onImageClick}
         />
       </div>

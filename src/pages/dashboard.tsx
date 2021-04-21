@@ -86,6 +86,11 @@ export interface IAdHocFileShare {
   mobile: string;
 }
 
+interface IGlobalModalMsg {
+  title: string;
+  text: string;
+}
+
 export default function Dashboard() {
   const [fileShare, setFileShare] = useState<IFileShare>({
     userId: '',
@@ -99,7 +104,11 @@ export default function Dashboard() {
   const [showShareUserModal, setShowShareUserModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [userPassword, setUserPassword] = useState('');
+  const [inputModalPassword, setInputModalPassword] = useState('');
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+  const [globalModalMsg, setGlobalModalMsg] = useState<IGlobalModalMsg | null>(
+    null
+  );
   // const [shareesArr, setShareesArr] = useState<any[]>([
   //   {
   //     shareUserId: 'test',
@@ -178,8 +187,13 @@ export default function Dashboard() {
   };
 
   const handleShareFileToUser = async (fileId: string, userId: string) => {
-    const password = window.prompt("Enter agency's password"); // Get the agency's password
-    if (typeof password === 'object') return;
+    let password: string | null = null;
+    if (!userPassword) {
+      password = window.prompt("Enter agency's password"); // Get the agency's password
+      if (typeof password === 'object') return;
+    } else {
+      password = userPassword;
+    }
 
     setLoadingShare(true);
 
@@ -203,6 +217,8 @@ export default function Dashboard() {
       );
       return;
     }
+
+    if (!userPassword) setUserPassword(password);
 
     // Get the receiver's public key and file's data key with fileId, userId (agency) and receiver's userId
     // userId and fileId to get encrypted data key of the file
@@ -242,17 +258,32 @@ export default function Dashboard() {
   };
 
   const handleShareFileToPublicUser = async () => {
+    let password: string = '';
+    password = !userPassword ? inputModalPassword : userPassword;
+
     const saltUint = base64StringToArrayBuffer(salt) as Uint8Array;
     const ivUint = base64StringToArrayBuffer(iv) as Uint8Array;
 
     // Get the encrypted private key of the sharer (agency) and decrypt it with the agency's password with scrypt
     const { encryptedPrivateKey } = await getUserEncryptedPrivateKey(userid!);
-    const plainPrivateKey = await decryptDataWithPasswordWithScrypt(
-      userPassword,
-      encryptedPrivateKey,
-      saltUint,
-      ivUint
-    );
+
+    let plainPrivateKey: string = '';
+    try {
+      plainPrivateKey = await decryptDataWithPasswordWithScrypt(
+        password,
+        encryptedPrivateKey,
+        saltUint,
+        ivUint
+      );
+    } catch (err) {
+      setIsGlobalLoading(false);
+      setError(
+        'Failed to share file. Make sure you entered the correct password.'
+      );
+      return;
+    }
+
+    if (!userPassword) setUserPassword(password);
 
     // Get the encrypted data key of the file
     const response = await getUserPublicKeyAndFileDatakey(
@@ -306,7 +337,6 @@ export default function Dashboard() {
   useEffect(() => {
     if (userid) fetchAllFiles();
     refetchUser();
-    // console.log('eservice', eservice);
   }, [userid]);
 
   useEffect(() => {
@@ -334,9 +364,14 @@ export default function Dashboard() {
 
     const { id: fileID, name: filename, type: filetype } = item;
     console.log('Start download');
-    const password = window.prompt('Enter your password');
 
-    if (typeof password === 'object') return;
+    let password: string | null = null;
+    if (!userPassword) {
+      password = window.prompt('Enter your password'); // Get the agency's password
+      if (typeof password === 'object') return;
+    } else {
+      password = userPassword;
+    }
 
     setLoadingShare(true);
 
@@ -366,6 +401,8 @@ export default function Dashboard() {
       );
       return;
     }
+
+    if (!userPassword) setUserPassword(password);
 
     // 3. Import the base64 private key into a CryptoKey
     const importedPrivateKey = await importPrivateKey(privateKeyString);
@@ -503,11 +540,26 @@ export default function Dashboard() {
 
   const handleGetSharees = async (userId: string, fileId: string) => {
     const sharees = await getSharees(userId, fileId);
+    if (sharees.length === 0)
+      setGlobalModalMsg({ title: 'Message', text: 'No sharee' });
     setShareesArr(sharees);
   };
 
   const handleRevoke = async (revokeUserid: string, fileid: string) => {
-    return revokeSharee(revokeUserid, fileid);
+    const result = await revokeSharee(revokeUserid, fileid);
+    if (result.deleted) {
+      setGlobalModalMsg({
+        title: 'Message',
+        text: `Sharing of file with id ${fileid} to user with id ${revokeUserid} has been revoked`,
+      });
+    } else {
+      setGlobalModalMsg({
+        title: 'Message',
+        text: `Failed to revoke sharing of file with id ${fileid} to user with id ${revokeUserid}`,
+      });
+    }
+
+    return result;
   };
 
   const fileComponents = data
@@ -548,11 +600,14 @@ export default function Dashboard() {
           />
         </div>
       ) : null}
-      <div className="grid grid-cols-3 gap-4">{fileComponents}</div>
+      <div className="grid lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4">
+        {fileComponents}
+      </div>
       <AppStateList />
       {showShareUserModal && (
         <InputModal
           show={showShareUserModal}
+          hidePassword={!!userPassword}
           title="User is not onboard, please provide information for ad hoc sharing."
           onClose={() => setShowShareUserModal(false)}
           onEnter={() => {
@@ -568,7 +623,7 @@ export default function Dashboard() {
           onMobileChange={(e) =>
             setAdHocFileShare({ ...adHocFileShare, mobile: e.target.value })
           }
-          onPasswordChange={(e) => setUserPassword(e.target.value)}
+          onPasswordChange={(e) => setInputModalPassword(e.target.value)}
         />
       )}
       {shareFileToPublicUserData && (
@@ -582,6 +637,15 @@ export default function Dashboard() {
             <a href={shareFileToPublicUserData.fileShareLoginURL}>click here</a>{' '}
             to view your shared file. PIN: {shareFileToPublicUserData.pin}
           </p>
+        </TextModal>
+      )}
+      {globalModalMsg && (
+        <TextModal
+          show
+          title={globalModalMsg.title}
+          onClose={() => setGlobalModalMsg(null)}
+        >
+          <p>{globalModalMsg.text}</p>
         </TextModal>
       )}
       {error && (

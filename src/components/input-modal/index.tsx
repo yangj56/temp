@@ -9,6 +9,7 @@ interface Props {
   onEmailChange: (e: any) => void;
   onMobileChange: (e: any) => void;
   onPasswordChange: (e: any) => void;
+  hidePassword?: boolean;
 }
 
 export const InputModal = ({
@@ -20,6 +21,7 @@ export const InputModal = ({
   onEmailChange,
   onMobileChange,
   onPasswordChange,
+  hidePassword = false,
 }: Props) => {
   return (
     <Modal show={show} onHide={onClose}>
@@ -55,15 +57,17 @@ export const InputModal = ({
             type="text"
           />
         </InputGroup>
-        <InputGroup style={{ marginTop: 10 }}>
-          <FormControl
-            id="password"
-            aria-describedby="basic-password"
-            onChange={onPasswordChange}
-            placeholder="Agency Password"
-            type="text"
-          />
-        </InputGroup>
+        {!hidePassword && (
+          <InputGroup style={{ marginTop: 10 }}>
+            <FormControl
+              id="password"
+              aria-describedby="basic-password"
+              onChange={onPasswordChange}
+              placeholder="Agency Password"
+              type="password"
+            />
+          </InputGroup>
+        )}
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={onClose}>
