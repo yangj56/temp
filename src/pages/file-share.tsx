@@ -11,12 +11,16 @@ import {
 } from 'features/poc/apis/poc';
 import { LoadingSpinner } from 'components/modal/loading';
 import { FileCard } from 'components/file-card';
-import { Role } from 'contants';
+import { AppState, Role } from 'contants';
 import { base64StringToArrayBuffer } from 'util/helper';
 import { decryptDataWithPasswordWithScrypt } from 'util/password-data-key';
 import { decryptWithSymmetricKey, importSymmtricKey } from 'util/symmetric-key';
 import { TextModal } from 'components/text-modal';
 import PdfViewer from 'components/pdf-viewer';
+import AppStateList from 'features/poc/components/appstate-list';
+import { AppDispatch } from 'store/store';
+import { useDispatch } from 'react-redux';
+import { insertAppState } from 'features/poc/slices/user';
 
 export const FileShare = () => {
   const [pinSalt, setPinSalt] = useState<Uint8Array>();
@@ -24,11 +28,16 @@ export const FileShare = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [pdf, setPdf] = useState<File | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
 
   const { search } = window.location;
   const searchParams = new URLSearchParams(search);
   const transactionId = searchParams.get('transactionId');
   const agencyId = searchParams.get('agencyId');
+
+  const dispatchAppState = (appState: string) => {
+    dispatch(insertAppState(appState));
+  };
 
   // Get all shared files based on transactionId
   const { isLoading, isError, data } = useQuery(
@@ -59,9 +68,10 @@ export const FileShare = () => {
       if (typeof password === 'object') return;
 
       setLoading(true);
-
+      dispatchAppState(AppState.ACTION_DOWNLOAD);
       let dataKeyString: string = '';
       try {
+        dispatchAppState(AppState.DECRYPT_DATA_KEY_PIN);
         // Enter PIN to generate password key with scrypt and decrypt the encrypted data key key with password key
         dataKeyString = await decryptDataWithPasswordWithScrypt(
           password!,
@@ -75,6 +85,7 @@ export const FileShare = () => {
         return;
       }
 
+      dispatchAppState(AppState.RETRIEVE_ENCRYPTED_FILE);
       // Get encrypted file
       const responseData = await getEncryptedFile(fileId);
       const fileIv = base64StringToArrayBuffer(tempDataIv) as Uint8Array;
@@ -85,6 +96,7 @@ export const FileShare = () => {
       // Convert the file back to array buffer
       const dataInBuffer: ArrayBuffer = await responseData.data.arrayBuffer();
 
+      dispatchAppState(AppState.DECRYPT_FILE_WITH_DATA_KEY);
       // Decrypt the file with the data key and iv
       const decryptedFile = await decryptWithSymmetricKey(
         importedDataKey,
@@ -92,6 +104,7 @@ export const FileShare = () => {
         fileIv
       );
 
+      dispatchAppState(AppState.PREPARE_FILE_FOR_DOWNLOAD);
       // Convert the file string back to Blob
       const dataFile = new File([decryptedFile!], filename, {
         type: filetype,
@@ -137,6 +150,7 @@ export const FileShare = () => {
       )}
       <Footer />
       {/* {pdf && <PdfViewer file={pdf} onClose={() => setPdf(null)} />} */}
+      <AppStateList />
     </LayoutDiv>
   );
 };

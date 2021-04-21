@@ -76,6 +76,7 @@ export interface IFileResponse {
   id: string;
   name: string;
   type: string;
+  size: number;
   thumbnailPath: string;
 }
 

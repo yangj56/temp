@@ -14,7 +14,11 @@ type Props = {
 export const SecondaryHeader = ({ headerTitle, icon }: Props) => {
   const routerHistory = useHistory();
   const userRole = useAppSelector(selectRole);
-  const eservice = useAppSelector(selectEservice);
+  const { search } = window.location;
+  const searchParams = new URLSearchParams(search);
+  const eservice = searchParams.get('eservice');
+  const userId = searchParams.get('userid');
+  // const eservice = useAppSelector(selectEservice);
 
   return (
     <Navbar
@@ -24,14 +28,26 @@ export const SecondaryHeader = ({ headerTitle, icon }: Props) => {
         backgroundColor: userRole === Role.AGENCY ? '#FCA5A5' : '#93C5FD',
       }}
     >
-      <div className="flex items-center">
+      <div className="flex flex-grow items-center">
         {(icon || headerTitle) && (
           <Navbar.Brand href="/">{icon || headerTitle}</Navbar.Brand>
         )}
         {userRole === Role.AGENCY && (
           <Card.Img style={{ height: 50, width: 50 }} src={ICALogo} />
         )}
-        {eservice && `Eservice: ${eservice}`}
+        <div
+          style={{
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginLeft: '15px',
+          }}
+        >
+          <div>{eservice && <strong>{`Eservice : ${eservice}`}</strong>}</div>
+          <div style={{ marginRight: '20px' }}>
+            {userId && <strong>{`${userId}`}</strong>}
+          </div>
+        </div>
       </div>
 
       <div>

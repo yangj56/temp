@@ -31,8 +31,10 @@ export function EService() {
             <Button
               variant="primary"
               onClick={() => {
-                dispatch(setEservice(Eservice.BIRTH_REG));
-                routerHistory.push(`/dashboard?userid=${userId}`);
+                // dispatch(setEservice(Eservice.BIRTH_REG));
+                routerHistory.push(
+                  `/dashboard?userid=${userId}&eservice=${Eservice.BIRTH_REG}`
+                );
               }}
             >
               Enter
@@ -45,8 +47,10 @@ export function EService() {
             <Button
               variant="primary"
               onClick={() => {
-                dispatch(setEservice(Eservice.DEATH_CERT));
-                routerHistory.push(`/dashboard?userid=${userId}`);
+                // dispatch(setEservice(Eservice.DEATH_CERT));
+                routerHistory.push(
+                  `/dashboard?userid=${userId}&eservice=${Eservice.DEATH_CERT}`
+                );
               }}
             >
               Enter

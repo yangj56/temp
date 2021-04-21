@@ -13,7 +13,11 @@ import {
 import {
   insertAppState,
   selectAppState,
+  setIV,
+  setPublicKey,
   setRole,
+  setSalt,
+  setUserID,
 } from 'features/poc/slices/user';
 import { useAppSelector } from 'hooks/useSlice';
 import { useEffect, useState } from 'react';
@@ -110,6 +114,10 @@ export function Login({ role, title, placeholder }: Props) {
 
   useEffect(() => {
     dispatch(setRole(role));
+    dispatch(setSalt(''));
+    dispatch(setIV(''));
+    dispatch(setUserID(''));
+    dispatch(setPublicKey(''));
   }, []);
 
   useEffect(() => {

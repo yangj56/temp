@@ -3,7 +3,7 @@
 /* eslint-disable no-alert */
 import { Secondary } from 'common/layout/secondary';
 import { LoadingSpinner } from 'components/modal/loading';
-import { AppState, QueryKey, Role } from 'contants';
+import { Eservice, AppState, QueryKey, Role } from 'contants';
 import {
   addEncryptedDataKey,
   getAllFiles,
@@ -36,11 +36,12 @@ import {
 } from 'features/poc/slices/user';
 import { useAppSelector } from 'hooks/useSlice';
 import { useEffect, useRef, useState } from 'react';
-import { Button, Card, PageItem, Spinner } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import { useMutation, useQuery } from 'react-query';
 import {
   arrayBufferToBase64,
   base64StringToArrayBuffer,
+  formatBytes,
   generateIV,
   generatePin,
   generateSalt,
@@ -111,19 +112,6 @@ export default function Dashboard() {
   const [globalModalMsg, setGlobalModalMsg] = useState<IGlobalModalMsg | null>(
     null
   );
-  // const [shareesArr, setShareesArr] = useState<any[]>([
-  //   {
-  //     shareUserId: 'test',
-  //     shareFileId: '123',
-  //     shareFileName: 'est',
-  //   },
-  //   {
-  //     shareUserId: 'test',
-  //     shareFileId: '123',
-  //     shareFileName: 'est',
-  //   },
-  // ]);
-
   const [shareesArr, setShareesArr] = useState<any[]>([]);
 
   const hiddenFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -137,7 +125,13 @@ export default function Dashboard() {
   const iv = useAppSelector(selectIV);
   const salt = useAppSelector(selectSalt);
   const publicKey = useAppSelector(selectPublicKey);
-  const eservice = useAppSelector(selectEservice);
+
+  const { search } = window.location;
+  const searchParams = new URLSearchParams(search);
+  const eservice =
+    searchParams.get('eservice') === Eservice.BIRTH_REG
+      ? Eservice.BIRTH_REG
+      : Eservice.DEATH_CERT;
 
   const dispatchAppState = (appState: string) => {
     dispatch(insertAppState(appState));
@@ -180,6 +174,7 @@ export default function Dashboard() {
   });
 
   const refetchUser = async () => {
+    dispatchAppState(AppState.ACTION_RETRIEVAL_USER_DATA);
     const searchParam = new URLSearchParams(window.location.search);
     const userId = searchParam.get('userid')!;
     const user = await getUserEncryptedPrivateKey(userId);
@@ -355,11 +350,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (userid) {
-      fetchAllFiles();
       dispatchAppState(AppState.ACTION_RETRIEVAL_FILE);
+      fetchAllFiles();
       dispatchAppState(AppState.RETRIEVE_ALL_FILE);
+    } else {
+      refetchUser();
     }
-    refetchUser();
   }, [userid]);
 
   useEffect(() => {
@@ -603,7 +599,8 @@ export default function Dashboard() {
   const fileComponents = data
     ? data.map((item, index) => (
         <FileCard
-          name={item.name}
+          name={`${item.name}`}
+          size={`${formatBytes(item.size)}`}
           thumbnailPath={item.thumbnailPath}
           onDownload={() => handleDownloadAction(item)}
           onShare={() => handleShareAction(item.id)}
@@ -638,7 +635,7 @@ export default function Dashboard() {
           />
         </div>
       ) : null}
-      <div className="grid lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4">
+      <div className="grid lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 m-4">
         {fileComponents}
       </div>
       <AppStateList />
@@ -697,28 +694,23 @@ export default function Dashboard() {
           title="Show Sharees"
           onClose={() => setShareesArr([])}
         >
-          {shareesArr.map(
-            (
-              { id: shareUserId, fileId: shareFileId, fileName: shareFileName },
-              index
-            ) => (
-              <div
-                className="flex items-center justify-between mb-5"
-                key={`sharee-${index}`}
+          {shareesArr.map(({ id: shareUserId, fileId: shareFileId }, index) => (
+            <div
+              className="flex items-center justify-between mb-5"
+              key={`sharee-${index}`}
+            >
+              <p className="mr-5">{`${shareUserId}`}</p>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  handleRevoke(shareUserId, shareFileId);
+                  setShareesArr([]);
+                }}
               >
-                <p className="mr-5">{`${shareUserId} - ${shareFileName}`}</p>
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    handleRevoke(shareUserId, shareFileId);
-                    setShareesArr([]);
-                  }}
-                >
-                  Revoke Access
-                </Button>
-              </div>
-            )
-          )}
+                Revoke Access
+              </Button>
+            </div>
+          ))}
         </TextModal>
       )}
       {(isGlobalLoading || loadingUpload || loadingShare) && (

@@ -6,6 +6,7 @@ import { Role } from '../../contants';
 
 interface Props {
   name: string;
+  size?: string;
   thumbnailPath: string;
   onDownload: () => void;
   onShare: () => void;
@@ -16,6 +17,7 @@ interface Props {
 
 export const FileCard = ({
   name,
+  size,
   thumbnailPath,
   onDownload,
   onShare,
@@ -53,6 +55,7 @@ export const FileCard = ({
       </div>
       <Card.Body>
         <Card.Text>Name: {name}</Card.Text>
+        {size && <Card.Text>Size: {size}</Card.Text>}
         <div className="flex flex-row justify-between">
           <Button variant="primary" onClick={onDownload}>
             download

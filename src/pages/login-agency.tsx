@@ -38,7 +38,7 @@ export function LoginAgency() {
         >
           <div style={{ fontFamily: 'Source Sans Pro', fontSize: '24px' }}>
             {' '}
-            ICA E-Service - Death Certificate{' '}
+            ICA E-Service{' '}
           </div>
         </div>
         <Login
