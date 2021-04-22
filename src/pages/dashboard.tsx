@@ -353,9 +353,8 @@ export default function Dashboard() {
       dispatchAppState(AppState.ACTION_RETRIEVAL_FILE);
       fetchAllFiles();
       dispatchAppState(AppState.RETRIEVE_ALL_FILE);
-    } else {
-      refetchUser();
     }
+    refetchUser();
   }, [userid]);
 
   useEffect(() => {
@@ -601,6 +600,7 @@ export default function Dashboard() {
         <FileCard
           name={`${item.name}`}
           size={`${formatBytes(item.size)}`}
+          sharer="ICA"
           thumbnailPath={item.thumbnailPath}
           onDownload={() => handleDownloadAction(item)}
           onShare={() => handleShareAction(item.id)}

@@ -1,12 +1,13 @@
 import React from 'react';
 import { Card, Button } from 'react-bootstrap';
 
-import FileImage from 'assets/file-image.jpeg';
+import FileImage from 'assets/file-image2.jpeg';
 import { Role } from '../../contants';
 
 interface Props {
   name: string;
   size?: string;
+  sharer?: string;
   thumbnailPath: string;
   onDownload: () => void;
   onShare: () => void;
@@ -18,6 +19,7 @@ interface Props {
 export const FileCard = ({
   name,
   size,
+  sharer,
   thumbnailPath,
   onDownload,
   onShare,
@@ -46,16 +48,27 @@ export const FileCard = ({
           variant="top"
           src={FileImage}
           style={{
-            height: '12rem',
-            width: '15rem',
+            height: '10rem',
+            width: '10rem',
             cursor: 'pointer',
           }}
           onClick={onImageClick}
         />
       </div>
       <Card.Body>
-        <Card.Text>Name: {name}</Card.Text>
-        {size && <Card.Text>Size: {size}</Card.Text>}
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div>
+            <Card.Text>Name: {name}</Card.Text>
+            {size && <Card.Text>Size: {size}</Card.Text>}
+          </div>
+          {sharer && (
+            <Card.Text>
+              Shared by: <br />
+              {sharer}
+            </Card.Text>
+          )}
+        </div>
+
         <div className="flex flex-row justify-between">
           <Button variant="primary" onClick={onDownload}>
             download
